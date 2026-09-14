@@ -1,0 +1,311 @@
+<!doctype html><html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DesignForge PDF Editor</title><link rel="stylesheet" href="./editor.css"><link rel="stylesheet" href="./standalone.css"><script defer src="./vendor/pdf.min.js"></script><script>document.addEventListener('DOMContentLoaded',()=>{pdfjsLib.GlobalWorkerOptions.workerSrc='./vendor/pdf.worker.min.js'});</script><script defer src="./vendor/pdf-lib.min.js"></script><script defer src="./vendor/fontkit.umd.min.js"></script><script defer src="./vendor/utif.js"></script></head><body><section id="section-pdf" class="app-section active">
+
+    <div class="pdf-panel" id="panel-combine">
+      <h2 class="pdf-panel-title">Combine images to PDF <button class="guide-btn" data-guide="combine">Guide</button></h2>
+      <div class="drop-zone" id="dz-images" data-accepts="image">
+        <div class="dz-inner" id="dz-images-inner">
+          <div class="dz-placeholder" id="dz-images-placeholder">
+            <div class="dz-plus" id="dz-images-trigger">+</div>
+            <span class="dz-hint">Drag images to combine</span>
+          </div>
+          <div class="dz-thumbs" id="dz-images-thumbs"></div>
+        </div>
+      </div>
+      <div class="pdf-options">
+        <div class="pdf-opt-row">
+          <label class="pdf-opt-label">Paper size</label>
+          <div class="select-wrap">
+            <select id="opt-papersize">
+              <option value="fit">Fit to image</option>
+              <option value="a4v">A4 Vertical</option>
+              <option value="a4h">A4 Horizontal</option>
+            </select>
+            <span class="select-arrow">&#8964;</span>
+          </div>
+        </div>
+        <div class="pdf-opt-row">
+          <label class="pdf-opt-label">Reduce quality</label>
+          <div class="select-wrap">
+            <select id="opt-quality">
+              <option value="none">None</option>
+              <option value="medium" selected>Medium</option>
+              <option value="strong">Strong</option>
+            </select>
+            <span class="select-arrow">&#8964;</span>
+          </div>
+        </div>
+      </div>
+      <button class="pdf-download-btn" id="btn-combine">Download PDF</button>
+    </div>
+
+    <div class="pdf-panel" id="panel-merge">
+      <h2 class="pdf-panel-title">Merge PDFs File <button class="guide-btn" data-guide="merge">Guide</button></h2>
+      <div class="drop-zone" id="dz-pdfs" data-accepts="pdf">
+        <div class="dz-inner" id="dz-pdfs-inner">
+          <div class="dz-placeholder" id="dz-pdfs-placeholder">
+            <div class="dz-plus" id="dz-pdfs-trigger">+</div>
+            <span class="dz-hint">Drag PDFs file to merge</span>
+          </div>
+          <div class="dz-thumbs" id="dz-pdfs-thumbs"></div>
+        </div>
+      </div>
+      <div class="pdf-options">
+        <div class="pdf-opt-row">
+          <label class="pdf-opt-label">Compress PDF</label>
+          <div class="select-wrap">
+            <select id="opt-compress">
+              <option value="none" selected>None</option>
+              <option value="medium">Medium</option>
+              <option value="strong">Strong</option>
+            </select>
+            <span class="select-arrow">&#8964;</span>
+          </div>
+        </div>
+      </div>
+      <button class="pdf-download-btn" id="btn-merge">Download PDF</button>
+    </div>
+
+    <div class="pdf-panel pdf-panel--edit" id="panel-edit">
+      <h2 class="pdf-panel-title"><span><small>TRANG PDF</small> Tệp &amp; trang</span><button class="guide-btn" data-guide="edit">Hướng dẫn</button></h2>
+      <div class="drop-zone" id="dz-edit" data-accepts="pdf">
+        <div class="dz-inner" id="dz-edit-inner">
+          <div class="dz-placeholder" id="dz-edit-placeholder">
+            <button class="dz-plus" id="dz-edit-trigger" type="button" aria-label="Chọn tệp PDF"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></button>
+            <strong>Thả PDF vào đây</strong>
+            <span class="dz-hint">hoặc bấm để chọn từ thiết bị</span>
+          </div>
+          <div class="dz-thumbs" id="dz-edit-thumbs"></div>
+        </div>
+      </div>
+
+      <div class="edit-export-img-section">
+        <label class="pdf-opt-label">XUẤT ẢNH TRANG</label>
+        <div class="edit-export-img-actions">
+          <button class="opt-action-btn" id="edit-export-img-page" style="flex: 1;">Trang hiện tại</button>
+          <button class="opt-action-btn" id="edit-export-img-all" style="flex: 1;">Tất cả trang</button>
+        </div>
+        <div class="nav-divider" style="background: #e0e0e0; margin: 12px 0 0 0;"></div>
+      </div>
+
+      <div class="edit-download-menu">
+        <div class="edit-download-options" id="edit-download-options" hidden>
+          <button class="edit-download-option" id="edit-download-flatten-btn" type="button">
+            <strong>Bản gộp theo hình ảnh</strong>
+          </button>
+          <button class="edit-download-option" id="edit-download-original-btn" type="button">
+            <strong>Giữ nội dung chỉnh sửa</strong>
+          </button>
+        </div>
+        <button class="pdf-download-btn" id="edit-download-btn" type="button" aria-expanded="false" aria-controls="edit-download-options">Xuất PDF</button>
+      </div>
+    </div>
+
+    <div class="edit-canvas-panel" id="panel-edit-canvas">
+
+      <div class="editor-stage-head">
+        <div><span class="editor-stage-kicker">CANVAS / 01</span><strong>Khu vực làm việc</strong></div>
+        <div class="editor-stage-state"><i></i><span id="editor-stage-status">Chưa chọn trang</span></div>
+      </div>
+
+      <div class="edit-top-toolbar">
+        
+        <div class="etb-row">
+          <label class="etb-label etb-font-label" for="edit-font">Phông chữ</label>
+          <div class="select-wrap etb-font-wrap">
+            <select id="edit-font" disabled>
+              <option value="">Arial</option>
+            </select>
+            <span class="select-arrow">&#8964;</span>
+          </div>
+
+          <label class="etb-label etb-style-label" for="edit-fontstyle">Kiểu chữ</label>
+          <div class="select-wrap etb-style-wrap">
+            <select id="edit-fontstyle" disabled>
+              <option value="normal">Regular</option>
+              <option value="bold">Bold</option>
+              <option value="italic">Italic</option>
+            </select>
+            <span class="select-arrow">&#8964;</span>
+          </div>
+
+          <div class="etb-divider"></div>
+
+          <label class="etb-label etb-size-label" for="edit-fontsize">Cỡ chữ</label>
+          <div class="spinner-wrap etb-size-wrap">
+            <input class="spinner-input" id="edit-fontsize" type="number" value="16" min="6" max="120" step="1" disabled />
+            <div class="spinner-btns horizontal">
+              <button class="spin-btn" data-target="edit-fontsize" data-dir="down">&#9664;</button>
+              <button class="spin-btn" data-target="edit-fontsize" data-dir="up">&#9654;</button>
+            </div>
+          </div>
+
+          <div class="etb-divider"></div>
+
+          <div class="etb-align-group">
+            <button class="etb-align-btn active" id="edit-align-left" title="Căn trái" aria-label="Căn trái" data-align="left" disabled>
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                <rect x="1" y="2" width="10" height="2" rx="1"/><rect x="1" y="6" width="14" height="2" rx="1"/><rect x="1" y="10" width="8" height="2" rx="1"/><rect x="1" y="14" width="12" height="2" rx="1"/>
+              </svg>
+            </button>
+            <button class="etb-align-btn" id="edit-align-center" title="Căn giữa" aria-label="Căn giữa" data-align="center" disabled>
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                <rect x="3" y="2" width="10" height="2" rx="1"/><rect x="1" y="6" width="14" height="2" rx="1"/><rect x="4" y="10" width="8" height="2" rx="1"/><rect x="2" y="14" width="12" height="2" rx="1"/>
+              </svg>
+            </button>
+            <button class="etb-align-btn" id="edit-align-right" title="Căn phải" aria-label="Căn phải" data-align="right" disabled>
+              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                <rect x="5" y="2" width="10" height="2" rx="1"/><rect x="1" y="6" width="14" height="2" rx="1"/><rect x="7" y="10" width="8" height="2" rx="1"/><rect x="3" y="14" width="12" height="2" rx="1"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="etb-row">
+          <label class="etb-label" for="edit-fillcolor">Màu nền</label>
+          <div class="etb-color-group">
+            <div class="color-wrap etb-color-wrap">
+              <input type="color" id="edit-fillcolor" value="#000000" class="color-swatch" disabled />
+            </div>
+            <button class="etb-none-btn" id="edit-fillcolor-none" title="Không tô nền" aria-label="Không tô nền" disabled>
+              <svg viewBox="0 0 16 16" width="14" height="14"><line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="1" y="1" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+          </div>
+
+          <div class="etb-divider"></div>
+
+          <label class="etb-label" for="edit-strokecolor">Viền</label>
+          <div class="etb-color-group">
+            <div class="color-wrap etb-color-wrap">
+              <input type="color" id="edit-strokecolor" value="#000000" class="color-swatch" disabled />
+            </div>
+            <button class="etb-none-btn" id="edit-strokecolor-none" title="Không viền" aria-label="Không viền" disabled>
+              <svg viewBox="0 0 16 16" width="14" height="14"><line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="1" y="1" width="14" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+          </div>
+          <div class="select-wrap etb-strokestyle-wrap">
+            <select id="edit-strokestyle" disabled style="padding-right: 20px; font-weight: bold;">
+              <option value="solid">━━</option>
+              <option value="dashed">- -</option>
+            </select>
+            <span class="select-arrow">&#8964;</span>
+          </div>
+          <div class="spinner-wrap etb-strokewidth-wrap">
+            <input class="spinner-input" id="edit-strokewidth" type="number" value="2" min="0" max="20" step="1" disabled style="padding-right: 0;" />
+            <span class="strokewidth-unit">pt</span>
+            <div class="spinner-btns horizontal">
+              <button class="spin-btn" data-target="edit-strokewidth" data-dir="down">&#9664;</button>
+              <button class="spin-btn" data-target="edit-strokewidth" data-dir="up">&#9654;</button>
+            </div>
+          </div>
+
+          <div class="etb-divider"></div>
+
+          <label class="etb-label" for="edit-zoom-input">Thu phóng</label>
+          <div class="spinner-wrap etb-zoom-wrap">
+            <input class="spinner-input" id="edit-zoom-input" type="number" value="1" min="1" max="10" step="0.2" style="padding-right: 0;" />
+            <span class="strokewidth-unit">x</span>
+            <div class="spinner-btns horizontal">
+              <button class="spin-btn" id="edit-zoom-out" title="Thu nhỏ">&#8722;</button>
+              <button class="spin-btn" id="edit-zoom-in" title="Phóng to">&#43;</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="edit-canvas-main">
+        
+        <div class="edit-left-toolbar-wrapper">
+          <div class="edit-left-toolbar">
+            <button class="elb-btn" id="edit-btn-text" title="Thêm chữ" aria-label="Thêm chữ">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M9 17H6.5L10 6h3l3.5 11h-2.5l-1-3.5h-4L9 17zm.7-5.5h3L11.5 8h-.1l-1.6 3.5z M18 8v3h-3v2h3v3h2v-3h3v-2h-3V8h-2z"/>
+              </svg>
+            </button>
+
+            <button class="elb-btn" id="edit-btn-image" title="Thêm ảnh · giữ Ctrl để làm mờ viền" aria-label="Thêm ảnh">
+              <svg viewBox="0 0 24 24" fill="currentColor">
+                <path d="M4 19V5h10V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-6h-2v6H4zm4-5l2.5 3.5 3.5-4.5 4.5 6H5l3-5z M18 3v3h-3v2h3v3h2V8h3V6h-3V3h-2z"/>
+              </svg>
+            </button>
+
+            <div class="elb-divider"></div>
+
+            <button class="elb-btn elb-shape-combo-btn" id="elb-shape-combo" title="Hình khối · Ctrl để đổi loại" aria-label="Vẽ hình khối">
+              <svg id="elb-shape-icon-rect" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="5" y="5" width="14" height="14" rx="1"/>
+              </svg>
+              <svg id="elb-shape-icon-triangle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="display:none">
+                <polygon points="12,4 21,19 3,19"/>
+              </svg>
+              <svg id="elb-shape-icon-ellipse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none">
+                <circle cx="12" cy="12" r="8"/>
+              </svg>
+            </button>
+
+            <button class="elb-btn elb-line-combo-btn" id="elb-line-combo" title="Đường thẳng hoặc mũi tên · Ctrl để đổi loại" aria-label="Vẽ đường thẳng hoặc mũi tên">
+              <svg id="elb-line-icon-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="20" x2="18" y2="6"/>
+                <polyline points="10,6 18,6 18,14"/>
+              </svg>
+              <svg id="elb-line-icon-plain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="display:none">
+                <line x1="4" y1="20" x2="20" y2="4"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Text Replace Button — nằm ngoài panel toolbar -->
+          <div class="smart-text-fill-btn-wrapper">
+            <button id="smart-text-fill-btn" title="Thay chữ nâng cao — kéo chọn vùng chữ cũ rồi nhập chữ mới" aria-label="Thay chữ nâng cao">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="edit-canvas-area" id="edit-canvas-area">
+          <div class="edit-empty-hint"><span>PDF EDITOR</span><strong>Chưa có trang được chọn</strong><small>Thêm một tệp PDF, sau đó chọn trang ở bảng bên trái để bắt đầu chỉnh sửa.</small></div>
+        </div>
+
+      </div>
+      <div class="edit-bottom-toolbar">
+        <div class="edit-opt-row" style="margin: 0;">
+          <button id="edit-master-all-toggle" class="opt-toggle-btn" title="Áp dụng cho tất cả các trang">Tất cả</button>
+          
+          <div class="etb-divider" style="height: 24px; margin: 0 8px;"></div>
+
+          <label class="pdf-opt-label">Khổ giấy</label>
+          <div class="select-wrap" style="width: 130px;">
+            <select id="edit-papersize">
+              <option value="none">Giữ nguyên</option>
+              <option value="a4v">A4 dọc</option>
+              <option value="a4h">A4 ngang</option>
+              <option value="a3v">A3 dọc</option>
+              <option value="a3h">A3 ngang</option>
+            </select>
+            <span class="select-arrow">&#8964;</span>
+          </div>
+        </div>
+
+        <div class="etb-divider" style="height: 24px; margin: 0 8px;"></div>
+
+        <div class="edit-rotate-row">
+          <label class="pdf-opt-label" style="min-width: auto;">Xoay trang</label>
+          <button class="opt-action-btn" id="edit-rotate-90">90&deg;</button>
+          <button class="opt-action-btn" id="edit-rotate-ccw">-90&deg;</button>
+        </div>
+
+        <div class="etb-divider" style="height: 24px; margin: 0 8px;"></div>
+
+        <button id="edit-crop-btn" class="opt-action-btn">Cắt trang</button>
+      </div>
+    </div>
+    <aside class="editor-inspector" aria-label="Thuộc tính PDF Editor">
+      <div class="inspector-head"><span class="editor-stage-kicker">INSPECTOR / 02</span><strong>Thuộc tính</strong></div>
+      <div class="inspector-context" aria-live="polite"><span class="inspector-orb" id="inspector-orb">--</span><div><strong id="inspector-selection-title">Chưa chọn trang</strong><small id="inspector-selection-meta">Thêm PDF để bắt đầu</small></div></div>
+      <div id="inspector-properties" class="inspector-properties"></div>
+      <div class="inspector-section"><span>PHÍM TẮT</span><div><kbd>← ↑ → ↓</kbd><small>Di chuyển đối tượng</small></div><div><kbd>Delete</kbd><small>Xóa đối tượng</small></div><div><kbd>Ctrl Z</kbd><small>Hoàn tác</small></div></div>
+      <div class="inspector-note"><i></i><span>Xử lý cục bộ<br/><small>File không rời khỏi trình duyệt.</small></span></div>
+    </aside>
+  </section><div class="guide-modal-overlay" id="guide-modal"><div class="guide-modal-content"><div class="guide-modal-header"><span class="guide-modal-title">Hướng dẫn PDF Editor</span><button class="guide-modal-close" id="guide-modal-close" aria-label="Đóng hướng dẫn"></button></div><div class="guide-modal-body" id="guide-modal-body"></div></div></div><script defer src="./js/utils.js"></script><script defer src="./js/guide.js"></script><script defer src="./js/edit-pdf-state.js"></script><script defer src="./js/edit-pdf-canvas.js"></script><script defer src="./js/edit-pdf-shapes.js"></script><script defer src="./js/edit-pdf-export.js"></script><script defer src="./js/edit-pdf-toolbar.js"></script><script defer src="./js/edit-pdf-dropzone.js"></script><script defer src="./js/edit-pdf-font-detect.js"></script><script defer src="./js/edit-pdf-scan-effects.js"></script><script defer src="./js/smart-text-replace.js"></script><script defer src="./js/editor-layout.js"></script><script defer src="./js/edit-pdf.js"></script><script>document.addEventListener("DOMContentLoaded",()=>{initEditPDF();document.documentElement.dataset.editorReady='true';window.parent.postMessage('designforge-pdf-editor-ready',window.location.origin)});</script></body></html>
+
