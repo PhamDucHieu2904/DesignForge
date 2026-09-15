@@ -196,6 +196,8 @@ test('Prompt Library ships all eight legacy templates through typed feature boun
   assert.match(page, /Poster sản phẩm làm đẹp/);
   assert.match(page, /Aloe vera/);
   assert.match(page, /promptTemplateTaxonomy/);
+  assert.match(page, /return template\.thumbnail\.replace/);
+  assert.doesNotMatch(page, /return `\/\$\{template\.thumbnail/);
   assert.match(page, /Tạo prompt/);
   assert.match(page, /Sao chép prompt/);
   assert.match(repository, /designforge:prompt-draft:v1:/);

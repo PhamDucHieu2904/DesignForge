@@ -66,7 +66,7 @@ const promptTemplateTaxonomy: Record<string, { category: PromptCategoryId; subca
 };
 
 function imageUrl(template: PromptTemplate) {
-  return `/${template.thumbnail.replace(/^\/?assets\//, 'assets/')}`;
+  return template.thumbnail.replace(/^\/?assets\//, 'assets/');
 }
 
 export function PromptLibraryPage({ query, setQuery, savedIds, toggleSaved }: { query: string; setQuery: (value: string) => void; savedIds: string[]; toggleSaved: (id: string) => void }) {

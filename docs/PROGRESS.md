@@ -24,7 +24,9 @@ Thư mục làm việc hiện tại: `D:/program project/DesignForge`.
 
 Đã bỏ khối giới thiệu lớn ở đầu trang và tổ chức lại thư viện theo hai tầng. Sidebar trái gồm Poster nước giải khát, Poster thực phẩm và Poster sản phẩm làm đẹp; thanh nhóm con phía trên đổi theo chủ đề đang chọn. Tám mẫu nguồn hiện có được gắn taxonomy vào Juice, Tăng lực và Aloe vera. Các nhóm chưa có dữ liệu dùng trạng thái trống theo ngữ cảnh, không dựng prompt giả, trong khi tìm kiếm, lưu mẫu và trình chỉnh sửa vẫn giữ nguyên.
 
-Kiểm chứng lượt phân loại: `npm run check`, `npm test` (24/24) và `npm run build` pass. Browser QA tại `#/prompts` xác nhận 8 mẫu ở Nước giải khát, Juice lọc còn 6 mẫu, các nhóm trống đổi đúng tab/ngữ cảnh, modal Juice Splash vẫn mở được, viewport hẹp không tràn ngang và không có console warning/error.
+Kiểm chứng lượt phân loại và deploy: `npm run check`, `npm test` (25/25) và `npm run build` pass. Browser QA tại `#/prompts` xác nhận 8 mẫu ở Nước giải khát, Juice lọc còn 6 mẫu, các nhóm trống đổi đúng tab/ngữ cảnh, modal Juice Splash vẫn mở được, viewport hẹp không tràn ngang và không có console warning/error.
+
+GitHub Pages QA phát hiện và đã sửa thumbnail Prompt còn dùng đường dẫn tuyệt đối `/assets`; ảnh hiện dùng đường dẫn tương đối để chạy đúng cả ở local root lẫn project path `/DesignForge/`.
 
 Files chính: `src/features/prompts/templates.json`, `types.ts`, `engine.ts`, `repository.ts`, `PromptLibraryPage.tsx`, `prompts.css`, `src/assets/prompts/*`, `tests/prompt-engine.test.mjs`, `docs/decisions/ADR-0008-prompt-library-migration.md`.
 
