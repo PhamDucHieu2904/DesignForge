@@ -213,6 +213,7 @@ test('GitHub Pages deployment builds the project under its repository base path'
   assert.match(workflow, /BASE_PATH: \/DesignForge/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
   assert.match(build, /process\.env\.BASE_PATH/);
+  assert.match(build, /process\.env\.GITHUB_SHA/);
   assert.match(build, /dist\/\.nojekyll/);
   assert.match(readme, /phamduchieu2904\.github\.io\/DesignForge/);
 });

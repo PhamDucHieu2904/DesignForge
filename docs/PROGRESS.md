@@ -12,6 +12,8 @@ Thư mục làm việc hiện tại: `D:/program project/DesignForge`.
 
 Đã bổ sung workflow `.github/workflows/deploy-pages.yml` để kiểm tra, build và phát hành `dist` từ nhánh `main`. Build script hỗ trợ `BASE_PATH=/DesignForge`, sửa đường dẫn asset, thumbnail và PDF Editor cho project site, đồng thời tạo `.nojekyll`. URL mục tiêu: `https://phamduchieu2904.github.io/DesignForge/`.
 
+Bundle production dùng tám ký tự đầu của `GITHUB_SHA` trong tên file để mỗi lần deploy tạo URL mới, tránh trình duyệt giữ giao diện hoặc đường dẫn asset của commit cũ.
+
 ## Gọn hóa trang Công cụ
 
 Đã bỏ hero giới thiệu lớn và hình tròn DF ở đầu `#/tools` theo phản hồi giao diện. Sidebar nhóm công cụ, thanh tìm kiếm/sắp xếp và toàn bộ card/engine Barcode vẫn giữ nguyên; nội dung chính được đưa lên ngay sau header để giảm khoảng trống và tăng mật độ thao tác.
