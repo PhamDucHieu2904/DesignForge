@@ -69,13 +69,13 @@ Trạng thái tất cả mục “Giữ” ở snapshot: **đã phát hiện tro
 | BC-08 | Font, text size/margin, bar dimensions | index, barcode.js | properties | Giữ |
 | BC-09 | Margin, màu, hiển thị số, QR size | index, barcode.js | properties | Giữ |
 | BC-10 | SVG/PDF/PNG export | barcode.js | exporters | Giữ; matrix từng type cần runtime baseline |
-| PR-01 | 8 prompt templates và bản gốc/ảnh | prompt-templates.js, assets/prompts | content/prompts | Giữ |
-| PR-02 | Basic/advanced fields, options, defaults | prompt-generator.js | builder form | Giữ |
-| PR-03 | Literal interpolation, legacy replacements | prompt-generator.js | prompt engine | Giữ |
-| PR-04 | Sửa output, copy, character count | prompt-generator.js | output panel | Giữ |
-| PR-05 | Field presets trên trình duyệt | prompt-generator.js | browser adapter | Giữ; không tự migrate cross-origin |
+| PR-01 | 8 prompt templates và bản gốc/ảnh | prompt-templates.js, assets/prompts | content/prompts | Đã chuyển đủ 8 mẫu và 8 thumbnail vào Prompt Library |
+| PR-02 | Basic/advanced fields, options, defaults | prompt-generator.js | builder form | Đã chuyển; advanced dùng progressive disclosure |
+| PR-03 | Literal interpolation, legacy replacements | prompt-generator.js | prompt engine | Đã chuyển vào pure engine và có test |
+| PR-04 | Sửa output, copy, character count | prompt-generator.js | output panel | Đã chuyển |
+| PR-05 | Field presets trên trình duyệt | prompt-generator.js | browser adapter | Đã chuyển qua repository key mới; không tự migrate cross-origin |
 | PR-06 | Nhóm Juice/Coffee/Energy/Aloe vera | index, prompt registry | taxonomy | Giữ dữ liệu; nhóm trống xử lý rõ |
-| PR-07 | Mở Gemini/Dola, fallback | prompt-generator.js | external provider links | Giữ; người dùng chủ động |
+| PR-07 | Mở Gemini/Dola, fallback | prompt-generator.js | external provider links | Đã chuyển; người dùng chủ động mở link |
 | IM-01 | Import/drop image, preview/reset | image-filter.js | image-filter | Giữ |
 | IM-02 | Halftone circle/triangle/square/diamond | index, image-filter.js | halftone engine | Giữ |
 | IM-03 | Color, min/max, spacing, contrast | image-filter.js | controls | Giữ |

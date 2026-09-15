@@ -1,6 +1,10 @@
 # DesignForge
 
+Thư mục canonical để phát triển và chạy local là `D:\program project\DesignForge`. Nếu công cụ hoặc context mở nhầm `D:\Vinut-TK\Documents\ChatGPT\DesignForge`, hãy quay lại thư mục canonical này trước khi sửa code, build hoặc test.
+
 Website tổng hợp công cụ, tài nguyên, skill và prompt dành cho người làm thiết kế.
+
+Bản public: [https://phamduchieu2904.github.io/DesignForge/](https://phamduchieu2904.github.io/DesignForge/). Mỗi lần push lên nhánh `main`, workflow GitHub Pages sẽ kiểm tra, build với base path `/DesignForge` và tự động cập nhật website.
 
 Trạng thái ngày 14/09/2026: đã có foundation và visual prototype P1/P2; các engine legacy đang chờ baseline và migration.
 

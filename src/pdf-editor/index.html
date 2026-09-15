@@ -300,12 +300,11 @@
         <button id="edit-crop-btn" class="opt-action-btn">Cắt trang</button>
       </div>
     </div>
-    <aside class="editor-inspector" aria-label="Thuộc tính PDF Editor">
-      <div class="inspector-head"><span class="editor-stage-kicker">INSPECTOR / 02</span><strong>Thuộc tính</strong></div>
+    <aside class="editor-inspector" aria-label="Thông tin PDF Editor">
+      <div class="inspector-head"><span class="editor-stage-kicker">INSPECTOR / 02</span><strong>Thông tin trang</strong></div>
       <div class="inspector-context" aria-live="polite"><span class="inspector-orb" id="inspector-orb">--</span><div><strong id="inspector-selection-title">Chưa chọn trang</strong><small id="inspector-selection-meta">Thêm PDF để bắt đầu</small></div></div>
-      <div id="inspector-properties" class="inspector-properties"></div>
-      <div class="inspector-section"><span>PHÍM TẮT</span><div><kbd>← ↑ → ↓</kbd><small>Di chuyển đối tượng</small></div><div><kbd>Delete</kbd><small>Xóa đối tượng</small></div><div><kbd>Ctrl Z</kbd><small>Hoàn tác</small></div></div>
-      <div class="inspector-note"><i></i><span>Xử lý cục bộ<br/><small>File không rời khỏi trình duyệt.</small></span></div>
+      <div id="inspector-properties" class="inspector-properties" hidden></div>
+      <div class="inspector-future-panel" aria-hidden="true"></div>
     </aside>
   </section><div class="guide-modal-overlay" id="guide-modal"><div class="guide-modal-content"><div class="guide-modal-header"><span class="guide-modal-title">Hướng dẫn PDF Editor</span><button class="guide-modal-close" id="guide-modal-close" aria-label="Đóng hướng dẫn"></button></div><div class="guide-modal-body" id="guide-modal-body"></div></div></div><script defer src="./js/utils.js"></script><script defer src="./js/guide.js"></script><script defer src="./js/edit-pdf-state.js"></script><script defer src="./js/edit-pdf-canvas.js"></script><script defer src="./js/edit-pdf-shapes.js"></script><script defer src="./js/edit-pdf-export.js"></script><script defer src="./js/edit-pdf-toolbar.js"></script><script defer src="./js/edit-pdf-dropzone.js"></script><script defer src="./js/edit-pdf-font-detect.js"></script><script defer src="./js/edit-pdf-scan-effects.js"></script><script defer src="./js/smart-text-replace.js"></script><script defer src="./js/editor-layout.js"></script><script defer src="./js/edit-pdf.js"></script><script>document.addEventListener("DOMContentLoaded",()=>{initEditPDF();document.documentElement.dataset.editorReady='true';window.parent.postMessage('designforge-pdf-editor-ready',window.location.origin)});</script></body></html>
 

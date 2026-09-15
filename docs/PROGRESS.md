@@ -1,12 +1,34 @@
 # DesignForge — Tiến độ
 
-Cập nhật: 14/09/2026.
+Cập nhật: 15/09/2026.
 
 Thư mục làm việc hiện tại: `D:/program project/DesignForge`.
 
 ## Hiện tại
 
 **P1 foundation và P2 visual prototype đã triển khai. Chưa đạt functional parity với barcode-generator, chưa dựng backend, chưa deploy.**
+
+## GitHub Pages
+
+Đã bổ sung workflow `.github/workflows/deploy-pages.yml` để kiểm tra, build và phát hành `dist` từ nhánh `main`. Build script hỗ trợ `BASE_PATH=/DesignForge`, sửa đường dẫn asset, thumbnail và PDF Editor cho project site, đồng thời tạo `.nojekyll`. URL mục tiêu: `https://phamduchieu2904.github.io/DesignForge/`.
+
+## Gọn hóa trang Công cụ
+
+Đã bỏ hero giới thiệu lớn và hình tròn DF ở đầu `#/tools` theo phản hồi giao diện. Sidebar nhóm công cụ, thanh tìm kiếm/sắp xếp và toàn bộ card/engine Barcode vẫn giữ nguyên; nội dung chính được đưa lên ngay sau header để giảm khoảng trống và tăng mật độ thao tác.
+
+Đã gỡ Prompt Builder khỏi catalog công cụ và sidebar bộ lọc vì thư viện Prompt đã có route riêng tại `#/prompts`. Tám prompt template và trình tạo prompt vẫn giữ nguyên ở page đó.
+
+## Prompt Library migration
+
+Đã chuyển đủ 8 template và thumbnail từ `D:/program project/barcode-generator` sang route `#/prompts`. Trang mới có tìm kiếm trên tên, mô tả và field; card dùng thumbnail thật; trình chỉnh sửa chia trường chính/nâng cao, tự lưu bản nháp trên thiết bị, kiểm tra trường bắt buộc, tạo prompt bằng engine thuần, cho sửa kết quả, đếm ký tự và sao chép. Link Gemini/Dola chỉ mở khi người dùng chủ động và không gọi API AI từ DesignForge.
+
+Đã bỏ khối giới thiệu lớn ở đầu trang và tổ chức lại thư viện theo hai tầng. Sidebar trái gồm Poster nước giải khát, Poster thực phẩm và Poster sản phẩm làm đẹp; thanh nhóm con phía trên đổi theo chủ đề đang chọn. Tám mẫu nguồn hiện có được gắn taxonomy vào Juice, Tăng lực và Aloe vera. Các nhóm chưa có dữ liệu dùng trạng thái trống theo ngữ cảnh, không dựng prompt giả, trong khi tìm kiếm, lưu mẫu và trình chỉnh sửa vẫn giữ nguyên.
+
+Kiểm chứng lượt phân loại: `npm run check`, `npm test` (24/24) và `npm run build` pass. Browser QA tại `#/prompts` xác nhận 8 mẫu ở Nước giải khát, Juice lọc còn 6 mẫu, các nhóm trống đổi đúng tab/ngữ cảnh, modal Juice Splash vẫn mở được, viewport hẹp không tràn ngang và không có console warning/error.
+
+Files chính: `src/features/prompts/templates.json`, `types.ts`, `engine.ts`, `repository.ts`, `PromptLibraryPage.tsx`, `prompts.css`, `src/assets/prompts/*`, `tests/prompt-engine.test.mjs`, `docs/decisions/ADR-0008-prompt-library-migration.md`.
+
+Kiểm chứng: `npm run check`, `npm test` (23/23) và `npm run build` pass. Browser QA xác nhận đủ 8 card/8 thumbnail ở desktop 1440px, modal 1180px nằm trọn viewport, tạo được prompt 20.963 ký tự từ Juice Splash, output có thể sửa, provider link đúng nguồn, không có console warning/error và không tràn ngang. Ở viewport 375px, card về một cột rộng 324px, modal phủ đúng viewport và dùng một luồng cuộn để tránh vùng form bị co hoặc cuộn lồng nhau.
 
 ## Đã hoàn thành
 
@@ -133,3 +155,87 @@ Kiểm chứng sau hợp nhất: `npm run check`, `npm run build`, `npm test` pa
 Đã xác định `MutationObserver` trong `src/pdf-editor/js/editor-layout.js` tự ghi lại cùng các text node đang quan sát, tạo vòng lặp mutation liên tục và khóa main thread của iframe. Đã đổi sang cập nhật có điều kiện, thêm test hồi quy, tải các vendor script bằng `defer`, lazy-load Tesseract khi OCR thực sự được gọi và tự host Mona Sans để lần mở editor không phụ thuộc Google Fonts.
 
 Route shell hiện nhận tín hiệu `designforge-pdf-editor-ready` từ iframe, có loading state ngắn và fallback 1,2 giây. Kiểm chứng cuối: check/build pass, 13/13 test pass; browser QA xác nhận loading biến mất, page rail, canvas, inspector và toàn bộ control hiển thị đầy đủ tại `#/tools/pdf-editor`.
+
+## Xác nhận thư mục project canonical
+
+Đã xác nhận `D:\program project\DesignForge` là repo source/build đang chạy thực tế. `D:\Vinut-TK\Documents\ChatGPT\DesignForge` được đánh dấu là mirror lịch sử; README, AGENTS và launcher ở mirror đều trỏ về repo canonical để tránh sửa hoặc chạy nhầm project.
+
+## Color Halftone từ app cũ
+
+Đã đưa chức năng Color Halftone từ `D:/program project/barcode-generator` vào route `#/tools/image-filter`. Workspace mới giữ quy trình local: nhập ảnh, chọn hình hạt Circle/Triangle/Square/Diamond, màu halftone, kích thước hạt tối thiểu/tối đa, spacing, contrast và PPI; xem kết quả trên canvas rồi xuất PNG hoặc SVG. Ảnh nguồn được giới hạn cạnh lớn nhất 2200px trước khi lấy mẫu để tránh khóa trình duyệt.
+
+Engine thuần tại `src/features/image-filter/engine.ts` tách khỏi React và DOM, dùng chung dot list cho preview PNG và SVG export. Quyết định boundary được ghi tại `docs/decisions/ADR-0007-color-halftone-engine.md`; test kiến trúc xác nhận route, engine và stylesheet tồn tại.
+
+Kiểm chứng: `npm run check`, `npm run build`, `npm test` pass; browser QA route local xác nhận heading Color Halftone, import/dropzone, các điều khiển hình hạt, PPI và trạng thái export disabled khi chưa có ảnh. Known limit: chưa upload file mẫu qua browser QA trong vòng này, nên chưa xác nhận trực quan từng dạng hạt bằng fixture người dùng.
+
+## Refactor UI workspace Color Halftone
+
+Đã dùng skill UI UX promax để chỉnh lại route `#/tools/image-filter` thành workspace tập trung hơn: bỏ cụm hero/heading lớn `IMAGE STUDY / HALFTONE LAB`, bỏ dropdown Effect disabled không có tác dụng, gom sidebar thành các nhóm ảnh đầu vào, hiệu ứng, thông số hạt và export. Vùng preview có toolbar/meta riêng, empty state gọn hơn và canvas mặc định được ẩn khi chưa có ảnh để không còn mảng vuông trắng lạ ở giữa khung preview.
+
+Chức năng xử lý ảnh không đổi: import/drop ảnh, chọn Circle/Triangle/Square/Diamond, đổi màu, chỉnh min/max/spacing/contrast/PPI, reset, export PNG và SVG vẫn dùng cùng engine hiện tại. Test kiến trúc đã được bổ sung để khóa việc không đưa header cũ, effect disabled và canvas empty quay lại.
+
+Kiểm chứng: `npm run check`, `npm test` pass 18/18, `npm run build` pass sau khi chạy với quyền ghi `dist` trong repo canonical. Browser QA route local xác nhận tree render chỉ còn back link, sidebar điều khiển và khu vực preview mới; không còn node `.image-filter-heading` trong UI.
+
+### Làm thoáng thông tin ảnh trong sidebar
+
+Đã bỏ ba ô viền riêng của `Input pixels`, `Input size` và `PPI`. Ba thuộc tính giờ hiển thị thành ba dòng text trong danh sách thông tin phẳng, tránh cắt chữ ở sidebar hẹp; PPI vẫn là ô nhập inline để giữ nguyên khả năng chỉnh thông số.
+
+### Cố định nút thêm/xóa input Barcode
+
+Đã tách nút `+`/`−` khỏi input ghost cuối danh sách và neo cụm thao tác vào góc dưới phải của khung Input. Khi thêm nhiều mã, danh sách input có thể cuộn nhưng vị trí nút không thay đổi; chức năng thêm, xóa và tự focus input vẫn giữ nguyên.
+
+### Làm gọn inspector PDF Editor
+
+Đã chuyển toolbar thuộc tính của PDF Editor về đúng vị trí phía trên canvas thay vì nhét trong inspector phải. Các control phông chữ, kiểu chữ, cỡ chữ, màu, viền và thu phóng được làm compact theo mật độ app cũ nhưng vẫn dùng theme trắng tím; ô zoom thu nhỏ lại, select/input dùng nền trắng và label rõ hơn. Khung import PDF bên trái dùng nền lavender cùng canvas thay cho mảng xám tối. Inspector phải được dọn lại thành khu vực thông tin trang gọn, bỏ cụm phím tắt/local note thừa để dành chỗ cho nội dung sau này.
+
+### Căn lại toolbar PDF Editor
+
+Đã đưa nhóm `Màu nền`, `Viền`, `Thu phóng` lên vùng trống bên phải của hàng thuộc tính trên canvas, giữ nguyên toàn bộ ID và event cũ. Thanh thao tác cuối canvas (`Tất cả`, khổ giấy, xoay, cắt trang) được căn giữa trên desktop và tự trả về căn trái khi màn hình hẹp để không gây tràn ngang.
+
+Kiểm chứng: `npm run check`, `npm test`, `npm run build`.
+
+## Cover Promt Library trên homepage
+
+Đã thay card `Thiết kế có hệ thống.` bằng card `Promt Library`, dùng thumbnail `src/assets/promt-library.webp` do người dùng cung cấp. Card giữ form glass caption giống Image Filter Lab nhưng dùng panel đen bán trong suốt opacity 20%, blur 10px để thumbnail sáng và rõ hơn; subtitle là `Promt poster tùm lum tùm la sẽ update dần thêm` và link trực tiếp tới `#/prompts`.
+
+## Rút gọn hero trang Khám phá
+
+Đã bỏ eyebrow `YOUR NEXT IDEA STARTS HERE`, đoạn mô tả khám phá và CTA mở công cụ khỏi hero homepage. Tiêu đề được thay thành một dòng gọn: `Ở đây có chút công cụ cho des mới`. Desktop giữ một hàng; mobile cho phép tự xuống dòng để không tràn ngang. Các gallery, category rail và tool shelf bên dưới vẫn giữ nguyên.
+
+Kiểm chứng: browser QA tại `#/` đọc đúng heading mới và không còn các chuỗi cũ; `npm run check`, `npm run build`, `npm test` pass 15/15.
+
+## Hero homepage theo Artboard 2
+
+Đã cập nhật headline thành `Ở đây có chút công cụ cho designer mới nhú`, tô riêng cụm `designer mới nhú` bằng accent tím. Thêm đoạn giới thiệu cá nhân hai dòng theo artboard và đẩy toàn bộ cụm intro lên gần header hơn bằng spacing riêng cho trang Khám phá; gallery phía dưới giữ nguyên cấu trúc.
+
+Kiểm chứng: browser QA route `#/` xác nhận title, màu accent, đoạn giới thiệu và khoảng cách mới; `npm run check`, `npm run build`, `npm test` pass 16/16.
+
+## Cover Barcode Generator trên homepage
+
+Đã thay cover lớn đầu tiên trong gallery bằng ảnh `src/assets/barcode-background.webp` do người dùng cung cấp. Card hiển thị `Barcode Generator`, dòng `Cần thêm code khác, cần bổ sung thêm chức năng thì liên hệ`, overlay tối để giữ khả năng đọc chữ và link trực tiếp tới `#/tools`, nơi nhóm Barcode đang hoạt động.
+
+Build pipeline đã copy asset vào `dist/assets`; browser QA xác nhận ảnh, nội dung và accessible link `Mở Barcode Generator`. `npm run check`, `npm run build`, `npm test` pass 17/17.
+
+Đã bỏ hai nhãn trang trí `BARCODE / QR TOOLS` và `DESIGNFORGE TOOL` khỏi cover theo feedback; title, mô tả, ảnh nền và liên kết Barcode vẫn giữ nguyên. Test homepage được cập nhật để ngăn hai nhãn này quay lại.
+
+Đã sửa vị trí caption sau khi bỏ label: cụm `Barcode Generator` và mô tả được neo xuống đáy cover bằng `margin-top:auto`, khớp vị trí trong Artboard 2. Browser QA xác nhận caption nằm dưới ảnh, không còn nhảy lên đầu card.
+
+## Cover Image Filter Lab trên homepage
+
+Đã thay card Halftone Lab bằng thumbnail `src/assets/image-filter-lab-thumb.webp` do người dùng cung cấp. Card mới hiển thị `Image Filter Lab`, subtitle `Công cụ chuyển ảnh thành các hiệu ứng (Phù hợp in Flexo)`, caption neo đáy theo artboard và link tới marketplace với nhóm Img Filter được chọn sẵn.
+
+Build pipeline đã copy thumbnail vào `dist/assets`; browser QA xác nhận ảnh, title, subtitle và accessible link `Mở Image Filter Lab`. `npm run check`, `npm run build`, `npm test` pass 18/18.
+
+Đã thêm glass caption panel cho card Image Filter theo feedback: nền trắng bán trong suốt, bo góc, blur hậu cảnh, viền/shadow nhẹ; title, subtitle và icon mũi tên được đặt trên panel ở đáy card. Browser QA xác nhận khả năng đọc chữ được cải thiện và không đổi nhóm Img Filter.
+
+Đã cân lại glass caption panel theo mẫu mới: panel thấp hơn, nền trắng giảm về opacity 60%, blur tăng lên để hậu cảnh mờ rõ hơn và icon mũi tên được canh giữa theo chiều dọc. Thumbnail `src/assets/image-filter-lab-thumb.webp` đã được thay bằng file mới từ `D:\Vinut-TK\Downloads\Image Filter Lab Thumb.webp`; `npm run check`, `npm run build`, `npm test` pass 18/18.
+
+### Điều hướng Image Filter Lab về danh sách công cụ
+
+Thẻ Image Filter Lab trên homepage giờ mở `#/tools?collection=image-filter`, giữ người dùng ở marketplace và tự chọn tab Img Filter để hiển thị Halftone Lab. Route parser nhận query collection hợp lệ, còn đường dẫn `#/tools/image-filter` vẫn giữ cho workspace Color Halftone chuyên biệt.
+
+## Gộp footer homepage
+
+Đã bỏ footer riêng của DiscoverPage để tránh lặp với footer global. Footer cuối trang hiện giữ thương hiệu, tagline và credit creator; `by Hyper D²` cùng email `hieuphamdesdev@gmail.com` nằm trên một hàng, cỡ chữ credit tăng lên 14px và cỡ chữ footer mobile tăng lên 15px.
+
+Kiểm chứng: browser QA tại `#/` chỉ còn một footer, credit và email vẫn hiển thị đầy đủ; `npm run check`, `npm run build`, `npm test` pass 16/16.

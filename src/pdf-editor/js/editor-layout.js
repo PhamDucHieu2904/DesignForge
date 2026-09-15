@@ -1,16 +1,13 @@
-/* DesignForge workspace composition. Moves existing controls without changing their IDs or events. */
+/* DesignForge workspace composition. Keeps existing controls and events in the canvas toolbar. */
 function initEditorLayout() {
   const toolbar = document.querySelector('.edit-top-toolbar');
-  const mount = document.getElementById('inspector-properties');
   const stageState = document.querySelector('.editor-stage-state');
   const stageStatus = document.getElementById('editor-stage-status');
   const selectionTitle = document.getElementById('inspector-selection-title');
   const selectionMeta = document.getElementById('inspector-selection-meta');
   const inspectorOrb = document.getElementById('inspector-orb');
   const section = document.getElementById('section-pdf');
-  if (!toolbar || !mount || !section) return;
-
-  mount.appendChild(toolbar);
+  if (!toolbar || !section) return;
 
   const setText = (element, value) => {
     if (element && element.textContent !== value) element.textContent = value;
@@ -24,7 +21,7 @@ function initEditorLayout() {
     if (stageState?.classList.contains('is-ready') !== ready) stageState?.classList.toggle('is-ready', ready);
     setText(stageStatus, ready ? `Trang ${selected + 1} / ${pages.length}` : 'Chưa chọn trang');
     setText(selectionTitle, objectSelected ? 'Đối tượng đang chọn' : ready ? `Trang ${selected + 1}` : 'Chưa chọn trang');
-    setText(selectionMeta, objectSelected ? 'Chỉnh thuộc tính bên dưới' : ready ? `${pages.length} trang trong tài liệu` : 'Thêm PDF để bắt đầu');
+    setText(selectionMeta, objectSelected ? 'Dùng thanh thuộc tính phía trên canvas' : ready ? `${pages.length} trang trong tài liệu` : 'Thêm PDF để bắt đầu');
     setText(inspectorOrb, objectSelected ? 'OBJ' : ready ? String(selected + 1).padStart(2, '0') : '--');
   };
 

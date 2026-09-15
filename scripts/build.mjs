@@ -1,6 +1,11 @@
 import { build } from 'esbuild';
 import { copyFile, cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 
+const requestedBasePath = process.env.BASE_PATH?.trim() ?? '';
+const basePath = requestedBasePath && requestedBasePath !== '/'
+  ? `/${requestedBasePath.replace(/^\/+|\/+$/g, '')}`
+  : '';
+
 await rm('dist', { recursive: true, force: true });
 await mkdir('dist', { recursive: true });
 await build({
@@ -22,7 +27,11 @@ await Promise.all([
   'barcode-code128.png',
   'barcode-gs1128.png',
   'barcode-qr.png',
+  'barcode-background.webp',
+  'image-filter-lab-thumb.webp',
+  'promt-library.webp',
 ].map(file => copyFile(`src/assets/${file}`, `dist/assets/${file}`)));
+await cp('src/assets/prompts', 'dist/assets/prompts', { recursive: true });
 await Promise.all([
   'mona-sans-vietnamese-wght-normal.woff2',
   'mona-sans-latin-ext-wght-normal.woff2',
@@ -30,5 +39,19 @@ await Promise.all([
 ].map(file => copyFile(`node_modules/@fontsource-variable/mona-sans/files/${file}`, `dist/assets/${file}`)));
 await cp('src/pdf-editor', 'dist/pdf-editor', { recursive: true });
 const html = await readFile('index.html', 'utf8');
-await writeFile('dist/index.html', html.replace('/src/main.tsx', '/assets/app.js').replace('</head>', '    <link rel="stylesheet" href="/assets/app.css" />\n  </head>'));
+await writeFile('dist/index.html', html.replace('/src/main.tsx', `${basePath}/assets/app.js`).replace('</head>', `    <link rel="stylesheet" href="${basePath}/assets/app.css" />\n  </head>`));
+await writeFile('dist/.nojekyll', '');
+
+if (basePath) {
+  await Promise.all([
+    'dist/assets/app.js',
+    'dist/assets/app.css',
+    'dist/pdf-editor/standalone.css',
+  ].map(async file => {
+    const content = await readFile(file, 'utf8');
+    await writeFile(file, content
+      .replaceAll('/assets/', `${basePath}/assets/`)
+      .replaceAll('/pdf-editor/', `${basePath}/pdf-editor/`));
+  }));
+}
 console.log('DesignForge built to dist/');

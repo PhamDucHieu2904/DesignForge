@@ -1,5 +1,10 @@
 # DesignForge — project working agreement
 
+## Canonical project location
+
+This is the active DesignForge source and build repository: `D:\program project\DesignForge`.
+The folder `D:\Vinut-TK\Documents\ChatGPT\DesignForge` is a historical mirror. Do not edit, build, test, or run that mirror unless the user explicitly asks for it.
+
 ## Read before work
 
 1. `docs/MASTER-PLAN.md` for scope and architecture.

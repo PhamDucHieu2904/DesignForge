@@ -8,10 +8,15 @@ import { Icon } from './components/Icon';
 import { barcodeFormats, MAX_BARCODE_INPUTS, normalizeBarcodeValue, type BarcodeExportFormat, type BarcodeFormatId } from './features/barcode/engine';
 import { createBarcodeExport, downloadGeneratedFiles } from './features/barcode/exporter';
 import { combineImagesToPdf, downloadPdf, mergePdfFiles, type ImagePaperSize, type PdfQuality } from './features/pdf/exporter';
+import { buildHalftoneSvg, createHalftoneDots, drawHalftoneDot, pxToMm, type HalftoneSettings, type HalftoneShape } from './features/image-filter/engine';
+import { PromptLibraryPage } from './features/prompts/PromptLibraryPage';
 import './styles.css';
 
 type View = 'discover' | 'tools' | 'resources' | 'skills' | 'prompts' | 'saved';
 type ToolState = { slug: string } | null;
+type ToolCollection = 'all' | 'barcode' | 'pdf' | 'image-filter';
+
+const toolCollectionIds: ToolCollection[] = ['all', 'barcode', 'pdf', 'image-filter'];
 
 const nav: { view: View; label: string; icon: IconName }[] = [
   { view: 'discover', label: 'Khám phá', icon: 'spark' },
@@ -21,11 +26,13 @@ const nav: { view: View; label: string; icon: IconName }[] = [
   { view: 'prompts', label: 'Prompt', icon: 'scan' },
 ];
 
-function getRoute(): { view: View; tool: ToolState } {
-  const slug = window.location.hash.replace(/^#\/?/, '');
-  if (slug.startsWith('tools/')) return { view: 'tools', tool: { slug: slug.slice(6) } };
-  const view = ['discover', 'tools', 'resources', 'skills', 'prompts', 'saved'].includes(slug) ? slug as View : 'discover';
-  return { view, tool: null };
+function getRoute(): { view: View; tool: ToolState; collection?: ToolCollection } {
+  const [path, query = ''] = window.location.hash.replace(/^#\/?/, '').split('?');
+  const requestedCollection = new URLSearchParams(query).get('collection');
+  const collection = toolCollectionIds.includes(requestedCollection as ToolCollection) ? requestedCollection as ToolCollection : undefined;
+  if (path.startsWith('tools/')) return { view: 'tools', tool: { slug: path.slice(6) }, collection };
+  const view = ['discover', 'tools', 'resources', 'skills', 'prompts', 'saved'].includes(path) ? path as View : 'discover';
+  return { view, tool: null, collection };
 }
 
 function go(view: View, tool?: string) {
@@ -68,8 +75,10 @@ function App() {
       {searchOpen && <SearchDialog onClose={() => setSearchOpen(false)} onOpen={(item) => { setSearchOpen(false); item.kind === 'tool' ? openTool(item.slug) : go(item.kind === 'resource' ? 'resources' : item.kind === 'skill' ? 'skills' : 'prompts'); }} />}
       {route.tool && activeTool ? activeTool.id === 'pdf-editor'
         ? <PdfEditorWorkspace onBack={() => go('tools')} />
+        : activeTool.id === 'image-filter'
+          ? <ImageFilterWorkspace onBack={() => go('tools')} />
         : <ToolWorkspace key={activeTool.id} tool={activeTool} onBack={() => go('tools')} />
-        : <ViewPage view={route.view} query={query} setQuery={setQuery} savedIds={savedIds} toggleSaved={toggleSaved} onOpenTool={openTool} />}
+        : <ViewPage view={route.view} query={query} setQuery={setQuery} savedIds={savedIds} toggleSaved={toggleSaved} onOpenTool={openTool} initialCollection={route.collection} />}
     </main>
     <footer className="global-footer">
       <a href="#/" className="brand-lockup"><span className="brand-symbol"><Icon name="layers" size={22}/></span><strong>DesignForge<span className="brand-period">.</span></strong></a>
@@ -77,6 +86,85 @@ function App() {
       <div className="creator-credit"><span>by Hyper D²</span><a href="mailto:hieuphamdesdev@gmail.com">hieuphamdesdev@gmail.com</a></div>
     </footer>
   </div>;
+}
+
+type FilterSource = { name: string; width: number; height: number; data: Uint8ClampedArray };
+
+function ImageFilterWorkspace({ onBack }: { onBack: () => void }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [source, setSource] = useState<FilterSource | null>(null);
+  const [status, setStatus] = useState('Chưa có ảnh');
+  const [settings, setSettings] = useState<HalftoneSettings>({ color: '#7C45D6', minSize: 0, maxSize: 12, spacing: 16, contrast: 100, ppi: 300, shape: 'circle' });
+  const [dots, setDots] = useState<ReturnType<typeof createHalftoneDots>>([]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !source) return;
+    canvas.width = source.width; canvas.height = source.height;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    context.fillStyle = '#fff'; context.fillRect(0, 0, source.width, source.height);
+    const nextDots = createHalftoneDots(source.data, source.width, source.height, settings);
+    context.fillStyle = settings.color;
+    nextDots.forEach(dot => drawHalftoneDot(context, settings.shape, dot.x, dot.y, dot.diameter));
+    setDots(nextDots);
+    setStatus(`${source.width} × ${source.height} px`);
+  }, [source, settings]);
+
+  const loadImage = (file?: File) => {
+    if (!file || !file.type.startsWith('image/')) { setStatus('Vui lòng chọn file ảnh hợp lệ.'); return; }
+    const url = URL.createObjectURL(file); const image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, 2200 / Math.max(image.naturalWidth, image.naturalHeight));
+      const width = Math.max(1, Math.round(image.naturalWidth * scale)); const height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const buffer = document.createElement('canvas'); buffer.width = width; buffer.height = height;
+      const context = buffer.getContext('2d', { willReadFrequently: true });
+      if (!context) return;
+      context.drawImage(image, 0, 0, width, height);
+      setSource({ name: file.name.replace(/\.[^.]+$/, '') || 'image', width, height, data: context.getImageData(0, 0, width, height).data });
+    };
+    image.onerror = () => { URL.revokeObjectURL(url); setStatus('Không thể đọc ảnh này.'); }; image.src = url;
+  };
+  const update = <K extends keyof HalftoneSettings>(key: K, value: HalftoneSettings[K]) => setSettings(current => ({ ...current, [key]: value }));
+  const reset = () => setSettings({ color: '#7C45D6', minSize: 0, maxSize: 12, spacing: 16, contrast: 100, ppi: 300, shape: 'circle' });
+  const downloadBlob = (blob: Blob, name: string) => { const url = URL.createObjectURL(blob); const link = document.createElement('a'); link.href = url; link.download = name; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); };
+  const exportPng = () => { const canvas = canvasRef.current; if (canvas) canvas.toBlob(blob => blob && downloadBlob(blob, `${source?.name || 'image'}-halftone.png`), 'image/png'); };
+  const exportSvg = () => { if (!source) return; downloadBlob(new Blob([buildHalftoneSvg(source.width, source.height, dots, settings)], { type: 'image/svg+xml;charset=utf-8' }), `${source.name}-halftone.svg`); };
+  const measure = (px: number) => `${pxToMm(px, settings.ppi).toFixed(2).replace(/\.00$/, '')} mm`;
+  return <div className="image-filter-page">
+    <button className="back-link" onClick={onBack}><Icon name="arrow" size={16} /> Tất cả công cụ</button>
+    <div className="image-filter-workspace">
+      <aside className="image-filter-controls" aria-label="Điều khiển Color Halftone">
+        <div className="image-filter-control-heading"><div><span className="panel-kicker">IMAGE FILTER</span><h1>Color Halftone</h1></div><span className="image-filter-status" role="status">{status}</span></div>
+        <input ref={fileRef} className="visually-hidden" type="file" accept="image/*" onChange={event => { loadImage(event.target.files?.[0]); event.target.value = ''; }} />
+        <section className="image-filter-control-section" aria-label="Ảnh đầu vào">
+          <button className="image-filter-file-button" type="button" onClick={() => fileRef.current?.click()}><Icon name="image" size={18}/> Import image</button>
+          <dl className="image-filter-info-list" aria-label="Thông tin ảnh"><div><dt>Input pixels</dt><dd>{source ? `${source.width} × ${source.height} px` : '—'}</dd></div><div><dt>Input size</dt><dd>{source ? `${measure(source.width)} × ${measure(source.height)}` : '—'}</dd></div><div><dt>PPI</dt><dd><input className="image-filter-info-input" type="number" min="36" max="2400" value={settings.ppi} aria-label="PPI" onChange={event => update('ppi', Number(event.target.value) || 300)} /></dd></div></dl>
+        </section>
+        <section className="image-filter-control-section" aria-label="Hiệu ứng">
+          <label className="image-filter-label" htmlFor="image-filter-shape">Dot shape</label><select id="image-filter-shape" className="image-filter-select" value={settings.shape} onChange={event => update('shape', event.target.value as HalftoneShape)}><option value="circle">● Circle</option><option value="triangle">▲ Triangle</option><option value="square">■ Square</option><option value="diamond">◆ Diamond</option></select>
+          <div className="image-filter-color-row"><label className="image-filter-label" htmlFor="image-filter-color">Halftone color</label><output>{settings.color}</output></div><div className="image-filter-color-control"><input id="image-filter-color" type="color" value={settings.color} onChange={event => update('color', event.target.value)} /><span>Chọn màu hạt</span></div>
+        </section>
+        <section className="image-filter-control-section" aria-label="Thông số hạt">
+          <FilterRange label="Minimum dot size" value={settings.minSize} min={0} max={20} step={0.1} onChange={value => update('minSize', value)} suffix="px" ppi={settings.ppi} />
+          <FilterRange label="Maximum dot size" value={settings.maxSize} min={1} max={40} step={0.1} onChange={value => update('maxSize', Math.max(value, settings.minSize))} suffix="px" ppi={settings.ppi} />
+          <FilterRange label="Dot spacing" value={settings.spacing} min={4} max={48} step={0.1} onChange={value => update('spacing', value)} suffix="px" ppi={settings.ppi} />
+          <FilterRange label="Contrast" value={settings.contrast} min={50} max={180} step={1} onChange={value => update('contrast', value)} suffix="%" ppi={settings.ppi} />
+        </section>
+        <div className="image-filter-actions"><button type="button" className="image-filter-secondary-btn" disabled={!source} onClick={reset}>Reset</button><button type="button" className="image-filter-export-btn" disabled={!source} onClick={exportPng}>Export PNG</button><button type="button" className="image-filter-svg-btn" disabled={!source} onClick={exportSvg}>Export SVG</button></div>
+      </aside>
+      <section className="image-filter-preview-area" aria-label="Khu vực xem trước">
+        <div className="image-filter-preview-bar"><div><span>Preview</span><strong>{source?.name || 'Chưa có ảnh'}</strong></div><span>{source ? `${source.width} × ${source.height} px · ${settings.spacing} px grid` : 'Kéo ảnh vào khung hoặc chọn Import image'}</span></div>
+        <div className={`image-filter-dropzone ${source ? 'has-image' : ''}`} tabIndex={0} role="button" onClick={() => !source && fileRef.current?.click()} onKeyDown={event => { if ((event.key === 'Enter' || event.key === ' ') && !source) fileRef.current?.click(); }} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); if (!source) loadImage(event.dataTransfer.files?.[0]); }}><canvas ref={canvasRef} className={source ? '' : 'is-empty'} aria-label="Preview ảnh halftone" aria-hidden={!source} />{!source && <div className="image-filter-empty"><span className="image-filter-empty-icon"><Icon name="image" size={28}/></span><strong>Drop an image here</strong><span>hoặc bấm Import image để bắt đầu</span></div>}</div>
+      </section>
+    </div>
+  </div>;
+}
+
+function FilterRange({ label, value, min, max, step, suffix, ppi, onChange }: { label: string; value: number; min: number; max: number; step: number; suffix: string; ppi: number; onChange: (value: number) => void }) {
+  return <div className="image-filter-control-group"><div className="image-filter-label-row"><label className="image-filter-label">{label}</label><output>{value}{suffix}</output></div><input className="image-filter-range" type="range" min={min} max={max} step={step} value={value} onChange={event => onChange(Number(event.target.value))} /><div className="image-filter-mm-note">{pxToMm(value, ppi).toFixed(2)} mm at {ppi} PPI</div></div>;
 }
 
 function SearchDialog({ onClose, onOpen }: { onClose: () => void; onOpen: (item: CatalogItem) => void }) {
@@ -100,39 +188,36 @@ function SearchDialog({ onClose, onOpen }: { onClose: () => void; onOpen: (item:
   </div>;
 }
 
-function ViewPage({ view, query, setQuery, savedIds, toggleSaved, onOpenTool }: { view: View; query: string; setQuery: (value: string) => void; savedIds: string[]; toggleSaved: (id: string) => void; onOpenTool: (slug: string) => void }) {
+function ViewPage({ view, query, setQuery, savedIds, toggleSaved, onOpenTool, initialCollection }: { view: View; query: string; setQuery: (value: string) => void; savedIds: string[]; toggleSaved: (id: string) => void; onOpenTool: (slug: string) => void; initialCollection?: ToolCollection }) {
   if (view === 'discover') return <DiscoverPage savedIds={savedIds} toggleSaved={toggleSaved} onOpenTool={onOpenTool} />;
-  if (view === 'tools') return <ToolsMarketplacePage query={query} setQuery={setQuery} savedIds={savedIds} toggleSaved={toggleSaved} onOpenTool={onOpenTool} />;
-  const source = view === 'resources' ? resources : view === 'skills' ? skills : view === 'prompts' ? allCatalog.filter(item => item.kind === 'prompt') : allCatalog.filter(item => savedIds.includes(item.id));
-  const title = view === 'resources' ? 'Kho tài nguyên được chọn lọc' : view === 'skills' ? 'Skill để làm việc có hệ thống' : view === 'prompts' ? 'Prompt có thể tái sử dụng' : 'Những thứ bạn đã lưu';
-  const intro = view === 'resources' ? 'Nguồn tham khảo, font, mockup và checklist giúp quyết định thiết kế nhanh hơn.' : view === 'skills' ? 'Quy trình và checklist ngắn, đọc được và dùng được trong từng dự án.' : view === 'prompts' ? 'Bắt đầu từ một cấu trúc tốt, sau đó tinh chỉnh theo sản phẩm và hình ảnh của bạn.' : 'Các mục được lưu trên thiết bị này. Chưa có đồng bộ tài khoản.';
+  if (view === 'tools') return <ToolsMarketplacePage query={query} setQuery={setQuery} savedIds={savedIds} toggleSaved={toggleSaved} onOpenTool={onOpenTool} initialCollection={initialCollection} />;
+  if (view === 'prompts') return <PromptLibraryPage query={query} setQuery={setQuery} savedIds={savedIds} toggleSaved={toggleSaved} />;
+  const source = view === 'resources' ? resources : view === 'skills' ? skills : allCatalog.filter(item => savedIds.includes(item.id));
+  const title = view === 'resources' ? 'Kho tài nguyên được chọn lọc' : view === 'skills' ? 'Skill để làm việc có hệ thống' : 'Những thứ bạn đã lưu';
+  const intro = view === 'resources' ? 'Nguồn tham khảo, font, mockup và checklist giúp quyết định thiết kế nhanh hơn.' : view === 'skills' ? 'Quy trình và checklist ngắn, đọc được và dùng được trong từng dự án.' : 'Các mục được lưu trên thiết bị này. Chưa có đồng bộ tài khoản.';
   const filtered = source.filter(item => !query.trim() || [item.title, item.summary, item.category, ...item.tags].join(' ').toLocaleLowerCase('vi-VN').includes(query.toLocaleLowerCase('vi-VN')));
   return <div className="page-wrap"><div className="page-heading compact"><div><p className="eyebrow">{view === 'saved' ? 'BỘ SƯU TẬP CỦA BẠN' : 'DESIGNFORGE LIBRARY'}</p><h1>{title}</h1><p>{intro}</p></div><div className="heading-meta"><span>{filtered.length} mục</span></div></div><div className="catalog-toolbar"><label className="inline-search"><Icon name="search" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Tìm trong danh mục này..." aria-label="Tìm trong danh mục" /></label><button className="filter-button"><Icon name="sliders" /> Bộ lọc</button></div>{filtered.length ? <div className={`catalog-grid layout-${view}`}>{filtered.map(item => <CatalogCard key={item.id} item={item} saved={savedIds.includes(item.id)} onToggleSaved={toggleSaved} onOpenTool={onOpenTool} />)}</div> : <div className="empty-state"><span className="icon-tile large"><Icon name={view === 'saved' ? 'bookmark' : 'search'} /></span><h2>{view === 'saved' ? 'Chưa có mục nào được lưu' : 'Không tìm thấy kết quả'}</h2><p>{view === 'saved' ? 'Bấm biểu tượng lưu trên một card để giữ lại cho lần sau.' : 'Thử xóa bớt từ khóa hoặc bỏ bộ lọc.'}</p></div>}</div>;
 }
 
 function DiscoverPage({ savedIds, toggleSaved, onOpenTool }: { savedIds: string[]; toggleSaved: (id: string) => void; onOpenTool: (slug: string) => void }) {
   return <div className="page-wrap discovery">
-    <section className="discovery-intro"><div><p className="eyebrow">YOUR NEXT IDEA STARTS HERE</p><h1>Không gian cho<br/><span>mọi ý tưởng lớn.</span></h1></div><div className="intro-aside"><p>Khám phá công cụ, tài nguyên và kiến thức thiết kế. Chọn đúng thứ bạn cần, bắt đầu điều bạn muốn.</p><a href="#/tools" className="text-link">Mở hộp công cụ <Icon name="arrow"/></a></div></section>
+    <section className="discovery-intro"><h1>Ở đây có chút công cụ cho <span>designer mới nhú</span></h1><p>Một số công cụ có thể hữu ích cho người bắt đầu thiết kế, đúng hơn đây là web tôi làm để phục vụ công việc cho bản thân nhưng biết đâu nó cũng giúp được cho bạn<br/>Thấy hay thì cho tôi xin 1 tràng pháo tay là được :)))</p></section>
     <section className="feature-gallery" aria-label="Bộ sưu tập nổi bật">
-      <a className="gallery-cover cover-type" href="#/resources"><span className="gallery-label">THE DESIGN EDIT / 01</span><div className="type-art" aria-hidden="true">Aa<span>&amp;</span></div><div className="gallery-caption"><div><small>TYPOGRAPHY &amp; RESOURCES</small><h2>Chất liệu cho<br/>ý tưởng tiếp theo.</h2></div><span className="round-arrow"><Icon name="arrow"/></span></div></a>
-      <a className="gallery-cover cover-lab" href="#/tools/image-filter"><span className="gallery-label">EXPERIMENT WITH TEXTURE</span><div className="halftone-art" aria-hidden="true"/><div className="gallery-caption"><div><small>IMAGE TOOLS</small><h2>Halftone Lab</h2></div><span className="round-arrow"><Icon name="arrow"/></span></div></a>
-      <a className="gallery-cover cover-skill" href="#/skills"><span className="gallery-label">BUILD YOUR PROCESS</span><div className="grid-art" aria-hidden="true"><i/><i/><i/><i/></div><div className="gallery-caption"><div><small>SKILLS &amp; WORKFLOWS</small><h2>Thiết kế có hệ thống.</h2></div><span className="round-arrow"><Icon name="arrow"/></span></div></a>
+      <a className="gallery-cover cover-barcode" href="#/tools" aria-label="Mở Barcode Generator"><div className="gallery-caption"><div><h2>Barcode Generator</h2><p>Cần thêm code khác, cần bổ sung thêm chức năng thì liên hệ</p></div><span className="round-arrow"><Icon name="arrow"/></span></div></a>
+      <a className="gallery-cover cover-image-filter" href="#/tools?collection=image-filter" aria-label="Mở Image Filter Lab trong danh sách công cụ"><div className="gallery-caption"><div><h2>Image Filter Lab</h2><p>Công cụ chuyển ảnh thành các hiệu ứng (Phù hợp in Flexo)</p></div><span className="round-arrow"><Icon name="arrow"/></span></div></a>
+      <a className="gallery-cover cover-promt" href="#/prompts" aria-label="Mở Promt Library"><div className="gallery-caption"><div><h2>Promt Library</h2><p>Promt poster tùm lum tùm la sẽ update dần thêm</p></div><span className="round-arrow"><Icon name="arrow"/></span></div></a>
     </section>
     <nav className="category-rail" aria-label="Khám phá theo nhu cầu">{nav.slice(1).map((item,i)=><a href={`#/${item.view}`} key={item.view}><Icon name={item.icon}/><span>{item.label}</span><small>{[tools.length,resources.length,skills.length,allCatalog.filter(x=>x.kind==='prompt').length][i]} mục</small><Icon name="arrow" size={16}/></a>)}</nav>
     <section className="tool-shelf"><div className="shelf-intro"><p className="eyebrow">LESS FRICTION. MORE CREATING.</p><h2>Công việc nhỏ.<br/>Tiến độ lớn.</h2><p>Bộ công cụ thiết kế, luôn trong tầm tay.</p><a className="text-link" href="#/tools">Tất cả công cụ <Icon name="arrow"/></a></div><div className="quick-tools">{tools.map(item=><button key={item.id} onClick={()=>onOpenTool(item.slug)}><span className="icon-tile"><Icon name={item.icon}/></span><span><strong>{item.title}</strong><small>{item.category}</small></span><Icon name="arrow" size={18}/></button>)}</div></section>
     <section className="section-block"><div className="section-heading"><div><p className="eyebrow">CURATED FOR YOUR CREATIVE FLOW</p><h2>Thư viện cảm hứng</h2></div><a className="text-link" href="#/resources">Khám phá tài nguyên <Icon name="arrow"/></a></div><div className="resource-strip">{resources.slice(0,3).map((item,index)=><CatalogCard key={item.id} item={item} saved={savedIds.includes(item.id)} onToggleSaved={toggleSaved} onOpenTool={onOpenTool} featured index={index}/>)}</div></section>
     <section className="learning-strip"><div><p className="eyebrow">LEARN. APPLY. REPEAT.</p><h2>Mỗi dự án,<br/>một bước tiến.</h2><a className="text-link" href="#/skills">Khám phá skill <Icon name="arrow"/></a></div><div>{skills.map((item,i)=><a href="#/skills" key={item.id}><span>0{i+1}</span><div><h3>{item.title}</h3><p>{item.summary}</p></div><Icon name="arrow"/></a>)}</div></section>
-    <footer className="site-footer"><a href="#/" className="brand-lockup"><strong>DesignForge.</strong></a><p>Không gian sáng tạo của bạn.</p><a href="#/saved">Thư viện đã lưu <Icon name="arrow" size={16}/></a></footer>
   </div>;
 }
-
-type ToolCollection = 'all' | 'barcode' | 'pdf' | 'image-filter' | 'prompt';
 
 const toolCollections: { id: Exclude<ToolCollection, 'all'>; label: string; note: string; icon: IconName }[] = [
   { id: 'barcode', label: 'Barcode', note: 'Mã vạch & QR', icon: 'scan' },
   { id: 'pdf', label: 'PDF', note: 'Chuyển đổi & biên tập', icon: 'file' },
   { id: 'image-filter', label: 'Img Filter', note: 'Halftone & texture', icon: 'image' },
-  { id: 'prompt', label: 'Prompt', note: 'Prompt có cấu trúc', icon: 'spark' },
 ];
 
 function matchesToolCollection(item: ToolDefinition, collection: ToolCollection) {
@@ -140,12 +225,16 @@ function matchesToolCollection(item: ToolDefinition, collection: ToolCollection)
   if (collection === 'barcode') return item.id === 'barcode';
   if (collection === 'pdf') return item.category === 'PDF';
   if (collection === 'image-filter') return item.id === 'image-filter';
-  return item.id === 'prompt-builder';
+  return false;
 }
 
-function ToolsMarketplacePage({ query, setQuery, savedIds, toggleSaved, onOpenTool }: { query: string; setQuery: (value: string) => void; savedIds: string[]; toggleSaved: (id: string) => void; onOpenTool: (slug: string) => void }) {
-  const [collection, setCollection] = useState<ToolCollection>('barcode');
+function ToolsMarketplacePage({ query, setQuery, savedIds, toggleSaved, onOpenTool, initialCollection }: { query: string; setQuery: (value: string) => void; savedIds: string[]; toggleSaved: (id: string) => void; onOpenTool: (slug: string) => void; initialCollection?: ToolCollection }) {
+  const [collection, setCollection] = useState<ToolCollection>(initialCollection || 'barcode');
   const [sort, setSort] = useState<'recommended' | 'alphabetical'>('recommended');
+  useEffect(() => {
+    setCollection(initialCollection || 'barcode');
+    setQuery('');
+  }, [initialCollection, setQuery]);
   const visibleTools = useMemo(() => {
     const needle = query.toLocaleLowerCase('vi-VN').trim();
     const result = tools.filter(item => matchesToolCollection(item, collection)).filter(item => !needle || [item.title, item.summary, item.category, ...item.tags].join(' ').toLocaleLowerCase('vi-VN').includes(needle));
@@ -155,15 +244,6 @@ function ToolsMarketplacePage({ query, setQuery, savedIds, toggleSaved, onOpenTo
   const selectedCollectionLabel = collection === 'all' ? 'Tất cả công cụ' : toolCollections.find(item => item.id === collection)?.label;
 
   return <div className="tools-marketplace-page">
-    <section className="marketplace-hero">
-      <div>
-        <p className="eyebrow">DESIGNFORGE / TOOL LIBRARY</p>
-        <h1>Công cụ cho <span>nhịp làm việc.</span></h1>
-        <p>Chọn một công cụ, đưa dữ liệu vào và tiếp tục thiết kế. Mọi module đều được gom theo tác vụ để tìm nhanh hơn.</p>
-      </div>
-      <div className="marketplace-hero-mark" aria-hidden="true"><span>DF</span><i /></div>
-    </section>
-
     <div className="tools-marketplace-layout">
       <aside className="tool-filter-panel" aria-label="Danh mục công cụ">
         <div className="tool-filter-head"><div><p className="panel-kicker">BỘ LỌC</p><h2>Chọn công cụ</h2></div><Icon name="sliders" size={19}/></div>
@@ -321,8 +401,8 @@ function BarcodeToolPanel() {
               <span className="barcode-input-label" id={`barcode-${format.id}-label`}>Input</span>
               <div className="barcode-input-list">
                 {values[format.id].map((value, valueIndex) => <div className="barcode-input-row" key={`${format.id}-${valueIndex}`}><input id={`barcode-${format.id}-${valueIndex}`} value={value} onChange={event => updateValue(format.id, valueIndex, event.target.value)} placeholder="" maxLength={format.maxLength} inputMode={format.onlyDigits ? 'numeric' : 'text'} aria-label={`${format.title} input ${valueIndex + 1}`} aria-describedby={`barcode-${format.id}-feedback`} autoComplete="off" /></div>)}
-                <div className="barcode-input-row is-ghost"><input value="" disabled tabIndex={-1} aria-hidden="true" readOnly /><div className="barcode-row-actions"><button className="barcode-row-button add" type="button" onClick={() => addValue(format.id)} disabled={values[format.id].length >= MAX_BARCODE_INPUTS} aria-label={`Thêm input cho ${format.title}`}>+</button>{values[format.id].length >= 2 && <button className="barcode-row-button remove" type="button" onClick={() => removeValue(format.id)} aria-label={`Bớt một input của ${format.title}`}>−</button>}</div></div>
               </div>
+              <div className="barcode-row-actions"><button className="barcode-row-button add" type="button" onClick={() => addValue(format.id)} disabled={values[format.id].length >= MAX_BARCODE_INPUTS} aria-label={`Thêm input cho ${format.title}`}>+</button>{values[format.id].length >= 2 && <button className="barcode-row-button remove" type="button" onClick={() => removeValue(format.id)} aria-label={`Bớt một input của ${format.title}`}>−</button>}</div>
               <p className={`barcode-card-feedback ${cardFeedback ? `is-${cardFeedback.tone}` : ''}`} id={`barcode-${format.id}-feedback`} aria-live="polite">{cardFeedback?.message || ''}</p>
             </div>
             <div className="barcode-download-row"><select value={output} onChange={event => setOutputTypes(current => ({ ...current, [format.id]: event.target.value as BarcodeExportFormat }))} disabled={busy[format.id]} aria-label={`Định dạng xuất ${format.title}`}><option value="SVG">SVG</option><option value="PDF">PDF</option><option value="PNG">PNG</option></select><button className="primary-button barcode-download-button" type="button" disabled={!hasValue || busy[format.id]} onClick={() => download(format.id)}>{busy[format.id] ? `Đang tạo ${output}...` : `Download as ${output}`}</button></div>

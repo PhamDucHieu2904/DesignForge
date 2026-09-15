@@ -6,7 +6,6 @@ export const tools: ToolDefinition[] = [
   { id: 'merge-pdf', slug: 'merge-pdf', kind: 'tool', title: 'Ghép PDF', summary: 'Sắp xếp, gộp và kiểm tra các trang PDF trong một luồng gọn.', category: 'PDF', tags: ['PDF', 'Sắp xếp', 'Nén'], icon: 'layers', runtime: 'client', availability: 'ready', meta: 'Theo thứ tự', capabilities: ['Merge pages', 'Reorder', 'Quality modes'] },
   { id: 'pdf-editor', slug: 'pdf-editor', kind: 'tool', title: 'PDF Editor', summary: 'Thêm chữ, ảnh, shape, line và tinh chỉnh trang PDF.', category: 'PDF', tags: ['Text', 'Shape', 'Crop', 'Rotate'], icon: 'pen', runtime: 'client', availability: 'beta', meta: 'Editor nâng cao', capabilities: ['Text', 'Image', 'Shape', 'Crop', 'Rotate'] },
   { id: 'image-filter', slug: 'image-filter', kind: 'tool', title: 'Halftone Lab', summary: 'Biến ảnh thành hiệu ứng halftone với kiểm soát kích thước hạt.', category: 'Hình ảnh', tags: ['Halftone', 'SVG', 'PNG', 'PPI'], icon: 'image', runtime: 'client', availability: 'ready', meta: '4 kiểu hạt', capabilities: ['4 dot shapes', 'PPI', 'PNG', 'SVG'] },
-  { id: 'prompt-builder', slug: 'prompt-builder', kind: 'tool', title: 'Prompt Builder', summary: 'Điền thông tin theo mẫu và tạo prompt hình ảnh có cấu trúc.', category: 'Prompt', tags: ['Juice', 'Product', 'Commercial'], icon: 'spark', runtime: 'client', availability: 'ready', meta: '8 template', capabilities: ['8 templates', 'Advanced fields', 'Copy output'] },
 ];
 
 export const resources: CatalogItem[] = [
@@ -23,9 +22,14 @@ export const skills: CatalogItem[] = [
 ];
 
 export const prompts: CatalogItem[] = [
-  { id: 'p-01', slug: 'juice-splash', kind: 'prompt', title: 'Juice Splash', summary: 'Key visual đồ uống commercial với splash, đá lạnh và sản phẩm trung tâm.', category: 'Product image', tags: ['Juice', 'CGI', 'Summer'], icon: 'spark', meta: 'Template' },
-  { id: 'p-02', slug: 'premium-dark-splash', kind: 'prompt', title: 'Premium Dark Splash', summary: 'Một hướng ánh sáng tối, giàu tương phản cho visual đồ uống cao cấp.', category: 'Product image', tags: ['Dark', 'Premium'], icon: 'spark', meta: 'Template' },
-  { id: 'p-03', slug: 'frozen-fruit-macro', kind: 'prompt', title: 'Frozen Fruit Macro', summary: 'Macro trái cây trong đá, giữ cấu trúc prompt để tạo series nhất quán.', category: 'Product image', tags: ['Macro', 'Fruit'], icon: 'spark', meta: 'Template' },
+  { id: 'prompt-juice-splash', slug: 'juice-splash', kind: 'prompt', title: 'Juice Splash', summary: 'Poster nước trái cây với splash và không khí mùa hè.', category: 'Product image', tags: ['Juice', 'CGI', 'Summer'], icon: 'spark', meta: '10 trường' },
+  { id: 'prompt-premium-dark-splash', slug: 'premium-dark-splash', kind: 'prompt', title: 'Premium Dark Splash', summary: 'Poster đồ uống cao cấp với pedestal, nền tối và splash.', category: 'Product image', tags: ['Dark', 'Premium', 'Splash'], icon: 'spark', meta: '12 trường' },
+  { id: 'prompt-frozen-fruit-macro', slug: 'frozen-fruit-macro', kind: 'prompt', title: 'Frozen Fruit Macro', summary: 'Macro sản phẩm giữa những khối đá chứa trái cây.', category: 'Product image', tags: ['Macro', 'Fruit', 'Ice'], icon: 'spark', meta: '7 trường' },
+  { id: 'prompt-dynamic-ingredient-splash', slug: 'dynamic-ingredient-splash', kind: 'prompt', title: 'Dynamic Ingredient Splash', summary: 'Hero sản phẩm với nguyên liệu và splash chuyển động.', category: 'Product image', tags: ['Ingredient', 'Splash', 'Hero'], icon: 'spark', meta: '13 trường' },
+  { id: 'prompt-natural-basket-lifestyle', slug: 'natural-basket-lifestyle', kind: 'prompt', title: 'Natural Basket Lifestyle', summary: 'Bối cảnh lifestyle ngoài trời với giỏ mây và nguyên liệu tự nhiên.', category: 'Product image', tags: ['Lifestyle', 'Natural', 'Basket'], icon: 'spark', meta: '1 trường' },
+  { id: 'prompt-bright-orange-platform', slug: 'bright-orange-platform', kind: 'prompt', title: 'Bright Fruit Platform', summary: 'Trái cây và sản phẩm trên platform acrylic bóng.', category: 'Product image', tags: ['Fruit', 'Platform', 'Bright'], icon: 'spark', meta: '5 trường' },
+  { id: 'prompt-premium-fruit-beverage-hero', slug: 'premium-fruit-beverage-hero', kind: 'prompt', title: 'Orange Power Splash', summary: 'Key visual đồ uống trái cây với splash đóng băng chuyển động.', category: 'Product image', tags: ['Orange', 'Beverage', 'Splash'], icon: 'spark', meta: '5 trường' },
+  { id: 'prompt-frozen-coconut-strawberry', slug: 'frozen-coconut-strawberry', kind: 'prompt', title: 'Frozen Coconut Strawberry', summary: 'Lon sữa dừa dâu tây giữa đá lạnh và trái cây tươi.', category: 'Product image', tags: ['Coconut', 'Strawberry', 'Ice'], icon: 'spark', meta: '2 trường' },
 ];
 
 export const allCatalog = [...tools, ...resources, ...skills, ...prompts];
