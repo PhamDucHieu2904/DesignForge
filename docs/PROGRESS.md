@@ -245,3 +245,26 @@ Thẻ Image Filter Lab trên homepage giờ mở `#/tools?collection=image-filte
 Đã bỏ footer riêng của DiscoverPage để tránh lặp với footer global. Footer cuối trang hiện giữ thương hiệu, tagline và credit creator; `by Hyper D²` cùng email `hieuphamdesdev@gmail.com` nằm trên một hàng, cỡ chữ credit tăng lên 14px và cỡ chữ footer mobile tăng lên 15px.
 
 Kiểm chứng: browser QA tại `#/` chỉ còn một footer, credit và email vẫn hiển thị đầy đủ; `npm run check`, `npm run build`, `npm test` pass 16/16.
+
+## 16/09/2026 — Gif converter (local, chưa commit/push)
+Đã thêm mục Gif converter dưới Img Filter với hai thẻ Ảnh thành GIF và Video thành GIF. Có upload/drop, sắp xếp ảnh, delay từng ảnh, cắt đoạn video, FPS, kích thước, bảng màu, contain/cover, màu nền, lặp, preview, tải GIF, progress và hủy. Worker mã hóa từng frame, dọn tài nguyên khi thoát.
+Files: src/features/gif/*, main.tsx, data/catalog.ts, components/Icon.tsx, domain/types.ts, scripts/build.mjs, package.json/lock, tests/gif-engine.test.mjs, ADR-0009 và design-system/designforge/pages/gif-converter.md.
+Kiểm chứng: TypeScript, 29 tests và build pass; giải mã lại GIF kiểm tra màu/delay/vòng lặp; Edge upload/reorder PNG và cắt MP4 0.2–1.8s ở 5 FPS cho 8 frame đúng màu; kiểm tra ảnh hỏng, đoạn không hợp lệ, hủy/recovery; desktop/tablet/mobile không tràn ngang; không pageerror. Worker path /DesignForge đã xác nhận; preview hiện dùng build local.
+Giới hạn: codec video do trình duyệt hỗ trợ, tối đa 20 giây/240 frame và 40 triệu pixel đầu ra; GIF 256 màu, không âm thanh, alpha ghép nền. Chưa QA Safari/iOS.
+Đã tinh gọn hai card GIF theo pattern marketplace chuẩn: bỏ artwork xếp lớp riêng, khôi phục visual grid/icon/bookmark dùng chung và giới hạn bề rộng card để danh sách dễ quét hơn; mobile tự chuyển một cột.
+Đã đồng bộ kích thước card giữa Barcode, PDF, Img Filter và GIF theo chuẩn Barcode: chiều rộng card 340px ở desktop, chiều cao 423px, visual/body/footer có cùng nhịp; breakpoint nhỏ vẫn chuyển lưới về 2 rồi 1 cột để không tràn ngang.
+Đã đưa dropdown trong card PDF về cùng chuẩn Barcode: cao 34px, chữ 12px, nền trắng và caret tam giác hướng xuống.
+Đã thử cố định dropzone PDF ở 182px như khung Input Barcode nhưng bản này tạo mảng trắng và lệch bố cục tham chiếu.
+Đã khôi phục PDF card theo bố cục tham chiếu: dropzone 263px, dropdown và Download nằm sát bên dưới; nút “Thêm file” phủ trong đáy dropzone khi có file để các control không bị đẩy xuống.
+Đã đồng bộ lại chiều cao hai card PDF inline về `--tool-card-height` 423px như Barcode; feedback rỗng giữ chỗ cuối card để tổng chiều cao không bị ngắn hơn card chuẩn.
+Đã loại bỏ rule sizing PDF gây ghi đè theo card khác; hai card inline trở về chiều cao tự nhiên theo bố cục tham chiếu.
+Giữ các sửa dropdown Barcode local từ lượt trước. Tiếp theo: người dùng duyệt UI local, chỉ phát hành khi được yêu cầu.
+
+## 16/09/2026 — Khôi phục launcher local
+
+Đã sửa `scripts/dev.mjs` để chờ build hoàn tất rồi mới mở server, tránh server đọc `dist` trong lúc build đang thay file. `open-designforge.bat` giờ chờ HTTP 200 thay vì mở trình duyệt sau thời gian cố định. Đã chạy chính file BAT, xác nhận `http://127.0.0.1:4173/` trả HTTP 200; chưa push GitHub.
+Đã sửa launcher lần cuối: chạy thẳng `node.exe` và thêm `catch` cho lệnh polling PowerShell. Đã chạy từ trạng thái sạch, BAT thoát mã 0, mở URL và nhận HTTP 200.
+
+Đã sửa chiều cao dropdown ở chân thẻ PDF: rule `min-height:46px` dùng chung trước đây đã ghi đè `height:34px`, khiến các ô PDF cao hơn Barcode. Các select PDF hiện dùng `height/min-height:34px`, chữ 12px, padding và caret tam giác đồng nhất với select SVG của Barcode; dropzone PDF không thay đổi.
+
+Đã hạ hàng phân cách, dropdown và nút Download PDF thêm 23px để đáy nút PDF trùng đường chuẩn với hàng xuất Barcode. Khoảng cách được giữ cố định khi chưa có thông báo; feedback lỗi/thành công vẫn giữ nhịp cũ để không chồng lên nút.

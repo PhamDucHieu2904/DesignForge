@@ -22,6 +22,7 @@ await build({
   jsx: 'automatic',
   minify: process.env.NODE_ENV === 'production',
 });
+await build({ entryPoints: ['src/features/gif/worker.ts'], bundle: true, format: 'iife', platform: 'browser', target: ['es2022'], outfile: 'dist/assets/gif-worker.js', minify: true });
 await Promise.all([
   'barcode-ean13.png',
   'barcode-upca.png',

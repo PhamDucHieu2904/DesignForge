@@ -10,13 +10,14 @@ import { createBarcodeExport, downloadGeneratedFiles } from './features/barcode/
 import { combineImagesToPdf, downloadPdf, mergePdfFiles, type ImagePaperSize, type PdfQuality } from './features/pdf/exporter';
 import { buildHalftoneSvg, createHalftoneDots, drawHalftoneDot, pxToMm, type HalftoneSettings, type HalftoneShape } from './features/image-filter/engine';
 import { PromptLibraryPage } from './features/prompts/PromptLibraryPage';
+import { GifWorkspace } from './features/gif/GifWorkspace';
 import './styles.css';
 
 type View = 'discover' | 'tools' | 'resources' | 'skills' | 'prompts' | 'saved';
 type ToolState = { slug: string } | null;
-type ToolCollection = 'all' | 'barcode' | 'pdf' | 'image-filter';
+type ToolCollection = 'all' | 'barcode' | 'pdf' | 'image-filter' | 'gif';
 
-const toolCollectionIds: ToolCollection[] = ['all', 'barcode', 'pdf', 'image-filter'];
+const toolCollectionIds: ToolCollection[] = ['all', 'barcode', 'pdf', 'image-filter', 'gif'];
 
 const nav: { view: View; label: string; icon: IconName }[] = [
   { view: 'discover', label: 'Khám phá', icon: 'spark' },
@@ -77,6 +78,7 @@ function App() {
         ? <PdfEditorWorkspace onBack={() => go('tools')} />
         : activeTool.id === 'image-filter'
           ? <ImageFilterWorkspace onBack={() => go('tools')} />
+        : activeTool.category === 'GIF' ? <GifWorkspace key={activeTool.id} mode={activeTool.id === 'images-to-gif' ? 'images' : 'video'} onBack={() => { window.location.hash = '/tools?collection=gif'; }} />
         : <ToolWorkspace key={activeTool.id} tool={activeTool} onBack={() => go('tools')} />
         : <ViewPage view={route.view} query={query} setQuery={setQuery} savedIds={savedIds} toggleSaved={toggleSaved} onOpenTool={openTool} initialCollection={route.collection} />}
     </main>
@@ -218,11 +220,13 @@ const toolCollections: { id: Exclude<ToolCollection, 'all'>; label: string; note
   { id: 'barcode', label: 'Barcode', note: 'Mã vạch & QR', icon: 'scan' },
   { id: 'pdf', label: 'PDF', note: 'Chuyển đổi & biên tập', icon: 'file' },
   { id: 'image-filter', label: 'Img Filter', note: 'Halftone & texture', icon: 'image' },
+  { id: 'gif', label: 'Gif converter', note: 'Ảnh & video thành GIF', icon: 'film' },
 ];
 
 function matchesToolCollection(item: ToolDefinition, collection: ToolCollection) {
   if (collection === 'all') return true;
   if (collection === 'barcode') return item.id === 'barcode';
+  if (collection === 'gif') return item.category === 'GIF';
   if (collection === 'pdf') return item.category === 'PDF';
   if (collection === 'image-filter') return item.id === 'image-filter';
   return false;
@@ -258,7 +262,7 @@ function ToolsMarketplacePage({ query, setQuery, savedIds, toggleSaved, onOpenTo
           <div className="marketplace-tabs"><button className={collection === 'all' ? 'is-active' : ''} onClick={() => { setCollection('all'); setQuery(''); }}>Công cụ <b>{visibleTools.length}</b></button><span>Đã chọn: {selectedCollectionLabel}</span></div>
           <div className="marketplace-actions"><label className="marketplace-search"><Icon name="search" size={17}/><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Tìm công cụ..." aria-label="Tìm công cụ" /></label><label className="marketplace-sort">Sắp xếp<select value={sort} onChange={event => setSort(event.target.value as 'recommended' | 'alphabetical')} aria-label="Sắp xếp công cụ"><option value="recommended">Đề xuất</option><option value="alphabetical">Tên A–Z</option></select></label></div>
         </div>
-        {collection === 'barcode' && visibleTools.length ? <BarcodeToolPanel /> : collection === 'pdf' && visibleTools.length ? <PdfToolPanel items={visibleTools} savedIds={savedIds} onToggleSaved={toggleSaved} onOpenTool={onOpenTool} /> : visibleTools.length ? <div className="tool-marketplace-grid">{visibleTools.map(item => <ToolMarketplaceCard key={item.id} item={item} saved={savedIds.includes(item.id)} onToggleSaved={toggleSaved} onOpenTool={onOpenTool} />)}</div> : <div className="empty-state tool-marketplace-empty"><span className="icon-tile large"><Icon name="search" /></span><h2>Chưa có công cụ phù hợp</h2><p>Thử từ khóa khác hoặc chọn lại nhóm công cụ.</p></div>}
+        {collection === 'barcode' && visibleTools.length ? <BarcodeToolPanel /> : collection === 'pdf' && visibleTools.length ? <PdfToolPanel items={visibleTools} savedIds={savedIds} onToggleSaved={toggleSaved} onOpenTool={onOpenTool} /> : visibleTools.length ? <div className={collection === 'gif' ? 'tool-marketplace-grid gif-catalog-grid' : 'tool-marketplace-grid'}>{visibleTools.map(item => <ToolMarketplaceCard key={item.id} item={item} saved={savedIds.includes(item.id)} onToggleSaved={toggleSaved} onOpenTool={onOpenTool} />)}</div> : <div className="empty-state tool-marketplace-empty"><span className="icon-tile large"><Icon name="search" /></span><h2>Chưa có công cụ phù hợp</h2><p>Thử từ khóa khác hoặc chọn lại nhóm công cụ.</p></div>}
       </section>
     </div>
   </div>;
@@ -328,7 +332,7 @@ function PdfInlineCard({ mode }: { mode: PdfInlineMode }) {
     <div className={`pdf-inline-dropzone ${dragging ? 'is-dragging' : ''} ${files.length ? 'has-files' : ''}`} aria-label={`Khu vực thả file cho ${title}`} onDragOver={event => { event.preventDefault(); setDragging(true); }} onDragLeave={() => setDragging(false)} onDrop={onDrop}>
       {files.length ? <div className="pdf-file-list">{files.map((file, index) => <div className="pdf-file-item" key={`${file.name}-${file.lastModified}-${index}`} draggable onDragStart={event => event.dataTransfer.setData('text/plain', String(index))} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); const source = Number(event.dataTransfer.getData('text/plain')); if (Number.isInteger(source) && source !== index) setFiles(current => { const next = [...current]; const [moved] = next.splice(source, 1); next.splice(index, 0, moved); return next; }); }}><span className="pdf-file-number">{index + 1}</span><Icon name={isImages ? 'image' : 'file'} size={16}/><span title={file.name}>{file.name}</span><div className="pdf-file-actions"><button type="button" disabled={index === 0} onClick={event => { event.stopPropagation(); moveFile(index, -1); }} aria-label={`Đưa ${file.name} lên trước`}>↑</button><button type="button" disabled={index === files.length - 1} onClick={event => { event.stopPropagation(); moveFile(index, 1); }} aria-label={`Đưa ${file.name} xuống sau`}>↓</button><button type="button" onClick={event => { event.stopPropagation(); setFiles(current => current.filter((_, fileIndex) => fileIndex !== index)); }} aria-label={`Xóa ${file.name}`}>×</button></div></div>)}</div> : <div className="pdf-drop-placeholder"><button type="button" className="pdf-drop-plus" onClick={event => { event.stopPropagation(); inputRef.current?.click(); }} aria-label={`Chọn file cho ${title}`}>+</button><span>{hint}</span></div>}
     </div>
-    {files.length > 0 && <button className="pdf-add-more" type="button" onClick={() => inputRef.current?.click()}>+ Thêm file <span>{files.length} file</span></button>}
+    <button className={`pdf-add-more ${files.length ? '' : 'is-empty'}`} type="button" disabled={!files.length} aria-hidden={!files.length} onClick={() => inputRef.current?.click()}>+ Thêm file <span>{files.length} file</span></button>
     <div className={`pdf-inline-options ${isImages ? '' : 'single'}`}>
       {isImages && <select value={paperSize} onChange={event => setPaperSize(event.target.value as ImagePaperSize)} aria-label="Kích thước trang"><option value="fit">Fit to Image</option><option value="a4v">A4 Vertical</option><option value="a4h">A4 Horizontal</option></select>}
       <select value={quality} onChange={event => setQuality(event.target.value as PdfQuality)} aria-label={isImages ? 'Chất lượng ảnh' : 'Mức nén PDF'}><option value="high">Quality: High</option><option value="medium">Quality: Medium</option><option value="compact">Quality: Compact</option></select>
@@ -405,7 +409,7 @@ function BarcodeToolPanel() {
               <div className="barcode-row-actions"><button className="barcode-row-button add" type="button" onClick={() => addValue(format.id)} disabled={values[format.id].length >= MAX_BARCODE_INPUTS} aria-label={`Thêm input cho ${format.title}`}>+</button>{values[format.id].length >= 2 && <button className="barcode-row-button remove" type="button" onClick={() => removeValue(format.id)} aria-label={`Bớt một input của ${format.title}`}>−</button>}</div>
               <p className={`barcode-card-feedback ${cardFeedback ? `is-${cardFeedback.tone}` : ''}`} id={`barcode-${format.id}-feedback`} aria-live="polite">{cardFeedback?.message || ''}</p>
             </div>
-            <div className="barcode-download-row"><select value={output} onChange={event => setOutputTypes(current => ({ ...current, [format.id]: event.target.value as BarcodeExportFormat }))} disabled={busy[format.id]} aria-label={`Định dạng xuất ${format.title}`}><option value="SVG">SVG</option><option value="PDF">PDF</option><option value="PNG">PNG</option></select><button className="primary-button barcode-download-button" type="button" disabled={!hasValue || busy[format.id]} onClick={() => download(format.id)}>{busy[format.id] ? `Đang tạo ${output}...` : `Download as ${output}`}</button></div>
+            <div className="barcode-download-row"><div className="barcode-output-select"><select value={output} onChange={event => setOutputTypes(current => ({ ...current, [format.id]: event.target.value as BarcodeExportFormat }))} disabled={busy[format.id]} aria-label={`Định dạng xuất ${format.title}`}><option value="SVG">SVG</option><option value="PDF">PDF</option><option value="PNG">PNG</option></select><span className="barcode-select-arrow" aria-hidden="true" /></div><button className="primary-button barcode-download-button" type="button" disabled={!hasValue || busy[format.id]} onClick={() => download(format.id)}>{busy[format.id] ? `Đang tạo ${output}...` : `Download as ${output}`}</button></div>
           </div>
         </article>;
       })}
@@ -415,7 +419,7 @@ function BarcodeToolPanel() {
 
 function ToolMarketplaceCard({ item, saved, onToggleSaved, onOpenTool }: { item: ToolDefinition; saved: boolean; onToggleSaved: (id: string) => void; onOpenTool: (slug: string) => void }) {
   return <article className={`tool-marketplace-card tool-art-${item.id}`}>
-    <div className="tool-marketplace-visual"><div className="tool-visual-grid" aria-hidden="true" /><span className="tool-visual-label">{item.category === 'PDF' ? 'DOCUMENT LAB' : item.id === 'barcode' ? 'CODE / PRINT' : item.id === 'image-filter' ? 'IMAGE STUDY' : 'PROMPT SYSTEM'}</span><span className="tool-visual-icon"><Icon name={item.icon} size={30}/></span><button className={`save-button ${saved ? 'is-saved' : ''}`} onClick={() => onToggleSaved(item.id)} aria-label={saved ? `Bỏ lưu ${item.title}` : `Lưu ${item.title}`} aria-pressed={saved}><Icon name="bookmark" size={17}/></button></div>
+    <div className="tool-marketplace-visual"><div className="tool-visual-grid" aria-hidden="true" /><span className="tool-visual-label">{item.category === 'GIF' ? 'GIF CONVERTER' : item.category === 'PDF' ? 'DOCUMENT LAB' : item.id === 'barcode' ? 'CODE / PRINT' : item.id === 'image-filter' ? 'IMAGE STUDY' : 'PROMPT SYSTEM'}</span><span className="tool-visual-icon"><Icon name={item.icon} size={30}/></span><button className={`save-button ${saved ? 'is-saved' : ''}`} onClick={() => onToggleSaved(item.id)} aria-label={saved ? `Bỏ lưu ${item.title}` : `Lưu ${item.title}`} aria-pressed={saved}><Icon name="bookmark" size={17}/></button></div>
     <div className="tool-marketplace-body"><div className="tool-marketplace-meta"><span><i className="status-dot" />{item.availability === 'beta' ? 'Beta' : 'Sẵn sàng'}</span><span>{item.runtime === 'client' ? 'Local' : item.runtime}</span></div><h2><button className="card-title-link" onClick={() => onOpenTool(item.slug)}>{item.title}</button></h2><p>{item.summary}</p><div className="tool-marketplace-tags">{item.tags.slice(0, 3).map(tag => <span key={tag}>{tag}</span>)}</div><div className="tool-marketplace-footer"><span>{item.meta || item.category}</span><button className="tool-open-button" onClick={() => onOpenTool(item.slug)}>Mở tool <Icon name="arrow" size={16}/></button></div></div>
   </article>;
 }

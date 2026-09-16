@@ -4,7 +4,11 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize } from 'node:path';
 
 const build = spawn(process.execPath, ['scripts/build.mjs'], { stdio: 'inherit' });
-build.on('close', (code) => { if (code !== 0) process.exit(code ?? 1); });
+const buildCode = await new Promise((resolve, reject) => {
+  build.once('error', reject);
+  build.once('close', resolve);
+});
+if (buildCode !== 0) process.exit(buildCode ?? 1);
 
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.map': 'application/json', '.png': 'image/png', '.woff2': 'font/woff2' };
 const server = createServer(async (req, res) => {

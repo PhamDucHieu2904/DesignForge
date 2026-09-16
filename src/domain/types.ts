@@ -15,7 +15,7 @@ export type CatalogItem = {
   meta?: string;
 };
 
-export type IconName = 'spark' | 'scan' | 'file' | 'image' | 'pen' | 'layers' | 'search' | 'arrow' | 'bookmark' | 'menu' | 'close' | 'sliders' | 'external';
+export type IconName = 'spark' | 'scan' | 'file' | 'image' | 'pen' | 'layers' | 'search' | 'arrow' | 'bookmark' | 'menu' | 'close' | 'sliders' | 'film' | 'external';
 
 export type ToolDefinition = CatalogItem & {
   kind: 'tool';

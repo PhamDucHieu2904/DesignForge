@@ -833,3 +833,6 @@ Không bắt đầu bằng việc bê toàn bộ HTML/CSS cũ vào DesignForge. 
 ## Cập nhật cấu trúc UI theo phản hồi
 
 Bố cục header ngang và gallery thay cho sidebar/hero prototype. Quy tắc hiện hành nằm trong design-system/designforge/MASTER.md, mục Bố cục gallery. Route, catalog và repository giữ nguyên.
+
+## Bổ sung theo yêu cầu ngày 16/09/2026
+Gif converter thuộc nhóm Công cụ, ngay dưới Img Filter: Ảnh thành GIF và Video thành GIF. Scope, giới hạn và kiến trúc thực thi được chốt trong ADR-0009; giao diện theo ADR-0006 và pages/gif-converter.md. Đây là tính năng bổ sung do người dùng yêu cầu, không thay thế backlog migration. Chưa push/phát hành lượt này.
