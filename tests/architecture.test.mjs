@@ -117,6 +117,18 @@ test('PDF Editor uses a responsive library, canvas and inspector workspace', asy
   assert.doesNotMatch(styles, /@media \(max-width:1100px\) \{ \.editor-inspector \{ display:none;/);
 });
 
+test('PDF Editor keeps the shell focused and uses CSS dropdown carets', async () => {
+  const [main, editor, styles] = await Promise.all([
+    readFile(join(root, 'src', 'main.tsx'), 'utf8'),
+    readFile(join(root, 'src', 'pdf-editor', 'index.html'), 'utf8'),
+    readFile(join(root, 'src', 'pdf-editor', 'standalone.css'), 'utf8'),
+  ]);
+  assert.doesNotMatch(main, /Xử lý cục bộ/);
+  assert.match(editor, /class="select-arrow" aria-hidden="true"><\/span>/);
+  assert.doesNotMatch(editor, /&#8964;/);
+  assert.match(styles, /border-top: 5px solid currentColor/);
+});
+
 test('PDF Editor inspector observer avoids a self-triggering mutation loop', async () => {
   const layout = await readFile(join(root, 'src', 'pdf-editor', 'js', 'editor-layout.js'), 'utf8');
   assert.match(layout, /element\.textContent !== value/);

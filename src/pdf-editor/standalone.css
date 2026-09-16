@@ -29,7 +29,7 @@ button, select, input, textarea { font: inherit; }
 button { touch-action: manipulation; }
 .select-wrap { position: relative; }
 .select-wrap select { width: 100%; appearance: none; outline: 0; cursor: pointer; }
-.select-arrow { position: absolute; top: 50%; right: 10px; pointer-events: none; transform: translateY(-50%); }
+.select-arrow { position: absolute; top: 50%; right: 10px; width: 0; height: 0; border-right: 4px solid transparent; border-left: 4px solid transparent; border-top: 5px solid currentColor; pointer-events: none; transform: translateY(-35%); }
 .spinner-wrap { display: flex; overflow: hidden; }
 .spinner-input { min-width: 0; flex: 1; border: 0; outline: 0; appearance: textfield; }
 .spinner-input::-webkit-outer-spin-button,.spinner-input::-webkit-inner-spin-button { margin: 0; appearance: none; }

@@ -451,7 +451,6 @@ function PdfEditorWorkspace({ onBack }: { onBack: () => void }) {
     <div className="pdf-editor-route-bar">
       <button className="back-link" onClick={onBack}><Icon name="arrow" size={16} /> Tất cả công cụ</button>
       <div className="pdf-editor-route-title"><span>WORKSPACE · PDF</span><strong>PDF Editor</strong></div>
-      <span className="pdf-editor-local"><i className="status-dot" /> Xử lý cục bộ</span>
     </div>
     <div className={`pdf-editor-frame-shell ${loaded ? 'is-loaded' : ''}`}>
       {!loaded && <div className="pdf-editor-loading" role="status"><span className="pdf-editor-loading-mark"><Icon name="file" size={24}/></span><strong>Đang mở PDF Editor</strong><small>Chuẩn bị công cụ chỉnh sửa trên thiết bị…</small></div>}

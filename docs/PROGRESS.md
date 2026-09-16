@@ -14,6 +14,8 @@ Thư mục làm việc hiện tại: `D:/program project/DesignForge`.
 
 Bundle production dùng tám ký tự đầu của `GITHUB_SHA` trong tên file để mỗi lần deploy tạo URL mới, tránh trình duyệt giữ giao diện hoặc đường dẫn asset của commit cũ.
 
+Đã gọn hóa shell PDF Editor bằng cách bỏ nhãn trạng thái “Xử lý cục bộ” ở góc phải và thay ký tự mũi tên dropdown bằng caret tam giác CSS có `aria-hidden`, giữ select native và vùng tương tác hiện có.
+
 ## Gọn hóa trang Công cụ
 
 Đã bỏ hero giới thiệu lớn và hình tròn DF ở đầu `#/tools` theo phản hồi giao diện. Sidebar nhóm công cụ, thanh tìm kiếm/sắp xếp và toàn bộ card/engine Barcode vẫn giữ nguyên; nội dung chính được đưa lên ngay sau header để giảm khoảng trống và tăng mật độ thao tác.
