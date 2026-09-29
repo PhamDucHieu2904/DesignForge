@@ -268,3 +268,62 @@ Giữ các sửa dropdown Barcode local từ lượt trước. Tiếp theo: ngư
 Đã sửa chiều cao dropdown ở chân thẻ PDF: rule `min-height:46px` dùng chung trước đây đã ghi đè `height:34px`, khiến các ô PDF cao hơn Barcode. Các select PDF hiện dùng `height/min-height:34px`, chữ 12px, padding và caret tam giác đồng nhất với select SVG của Barcode; dropzone PDF không thay đổi.
 
 Đã hạ hàng phân cách, dropdown và nút Download PDF thêm 23px để đáy nút PDF trùng đường chuẩn với hàng xuất Barcode. Khoảng cách được giữ cố định khi chưa có thông báo; feedback lỗi/thành công vẫn giữ nhịp cũ để không chồng lên nút.
+
+## 26/09/2026 — PDF Prepare Form
+Đã thêm công cụ PDF Prepare Form vào nhóm PDF. Người dùng có thể import PDF, xem từng trang bằng PDF.js, chọn trường Văn bản / Checkbox / Ngày tháng / Chữ ký, kéo để vẽ khung, đặt tên trường, chọn trang, xóa trường và tải xuống PDF AcroForm tương tác. PDF.js và worker được đóng gói vào `dist/assets`; mọi xử lý vẫn chạy trên thiết bị.
+Đã hoàn thiện workspace: zoom 10–2000%, kéo để di chuyển trường, chọn nhiều bằng Shift + click, xóa bằng phím Delete/Backspace, căn trái/giữa/phải và trên/giữa/dưới cho các trường cùng trang, cùng panel Lớp & Trường bên phải để chọn và chuyển trang. Layer panel có trạng thái rỗng, số lượng trường và hướng dẫn phím tắt.
+Kiểm chứng sau cập nhật: `npm run check` pass, `npm run build` pass, `npm test` pass 29/29; browser QA route `#/tools/pdf-prepare-form` xác nhận toolbar zoom, nhóm căn chỉnh, panel layer và trạng thái disabled khi chưa có PDF.
+Đã bổ sung zoom bằng con lăn khi con trỏ nằm trong workspace canvas; thao tác dùng delta trong dải thực dụng 10%–2000% và chặn scroll xuyên ra trang. Khung trường đang chọn có 8 điểm resize ở cạnh và góc, giới hạn kích thước tối thiểu và luôn bị clamp trong trang PDF.
+Browser QA với `tmp/pdf-qa/one.pdf`: tạo trường trên canvas thành công, 8 điểm scale hiển thị, kéo góc dưới phải làm khung lớn lên; lăn trong canvas đổi zoom `100% → 110% → 100%` đúng chiều.
+Đã sửa phản hồi UI về vùng làm việc bị nhỏ: bỏ giới hạn 780px của trang PDF, mở rộng shell tới 1840px, tăng chiều cao workspace theo viewport và đổi zoom từ CSS zoom sang nội dung layout thật để trang PDF thực sự lớn/nhỏ và có vùng scroll làm việc tương ứng.
+Đã hoàn thiện lại theo mô hình PDF Editor: canvas giữ kích thước viewport cố định, trang PDF nằm trong một zoom shell không bị flex shrink, transform theo góc trên trái và có scroll ngang/dọc độc lập. Zoom bằng nút/con lăn không còn hard-cap 180% (thực tế 10%–2000%); con lăn neo vùng phóng theo vị trí con trỏ để có thể đi tới chi tiết như text `Name`.
+
+Đã làm launcher chịu lỗi khóa file trên Windows: nếu build không thể thay thế `dist` vì một tiến trình khác đang giữ file, `scripts/dev.mjs` phục vụ bản build cuối cùng còn hợp lệ thay vì thoát trước khi mở server. Đã chạy lại `open-designforge.bat`, nhận HTTP 200 và browser QA xác nhận route PDF Prepare Form mount đầy đủ.
+
+## 28/09/2026 — Hoàn thiện tương tác PDF Prepare Form
+
+Đã hoàn thiện thao tác editor theo phản hồi: click vùng trống bỏ chọn; chọn nhiều và đổi tên hàng loạt theo tiền tố/số tăng dần/hậu tố; tên trường kiểm tra không trùng không phân biệt hoa thường; nhóm căn chỉnh đặt trên toolbar canvas; nút xóa phản ánh đúng một hoặc nhiều trường đang chọn. Import AcroForm đọc lại widget theo trang, vị trí và loại trường bằng type thật của `pdf-lib`, tránh lỗi checkbox bị biến thành text sau khi bundle tối ưu.
+
+Zoom canvas vẫn giữ viewport cố định nhưng nội dung có thể phóng 10%–2000%. Wheel zoom được chuẩn hóa theo `deltaMode`, giới hạn bước và gom cập nhật theo animation frame nên ít giật hơn, đồng thời giữ điểm dưới con trỏ. Viền trường, chữ overlay và tám handle resize dùng tỷ lệ nghịch với zoom để luôn giữ kích thước màn hình ổn định; ở QA 300% handle đo khoảng 7px và line còn 1px hiển thị thay vì phình theo trang.
+
+Đã tách phần tạo file thành hàm thuần `preparePdfForm` để kiểm chứng đầu ra độc lập với thao tác download. Kiểm tra: `npm run check` pass; `npm test` pass 29/29; `npm run build` pass; preview từ `scripts/dev.mjs` trả HTTP 200 ở cổng 4173. Browser QA import `existing-form.pdf` nhận đúng 1 text + 1 checkbox, click vùng trống trả selected count về 0, bulk rename tạo `item_10_field`/`item_11_field`, tên trùng tự đổi thành `_2`, wheel zoom đổi 300% → 322% với một nấc; file xuất được mở lại bằng `pdf-lib`, giữ 1 trang, `PDFTextField` + `PDFCheckBox`, tên `qa_1_field`/`qa_2_field` và widget rectangles hợp lệ. File chính: `src/features/pdf/PdfPrepareFormWorkspace.tsx`, `src/styles.css`.
+
+Giới hạn hiện biết: trường ngày/chữ ký mới được xuất dưới dạng text field có thể điền; PDF gốc vẫn được giữ nguyên subtype khi widget đã tồn tại. Bước tiếp theo nếu mở rộng nghiệp vụ là thêm property panel cho format/validation và hỗ trợ tách riêng một widget khi PDF nguồn có nhiều widget dùng chung một field name.
+
+## 28/09/2026 — Clipboard, undo và marquee selection
+
+Đã bổ sung thao tác editor cho PDF Prepare Form: Ctrl+C sao chép một hoặc nhiều trường đang chọn vào clipboard nội bộ của workspace; Ctrl+V dán thành field độc lập trên trang hiện tại, dịch nhẹ khỏi bản gốc và đặt hậu tố `_copy`, `_copy_2` để không trùng tên; Ctrl+Z hoàn tác lần lượt việc tạo, dán, xóa, đổi tên, căn chỉnh, di chuyển và resize. History lưu cả danh sách field lẫn trạng thái field gốc đã bị xóa, giới hạn 80 bước và chỉ ghi một bước cho toàn bộ một lần kéo/resize.
+
+Ctrl+kéo trên vùng trống tạo marquee tím để quét chọn mọi field giao với vùng chọn; lựa chọn từ layer và nút `Chọn trang` vẫn là phương án không cần drag. Toolbar và panel layer đã hiển thị hướng dẫn các phím tắt. Kiểm tra: TypeScript pass; `npm test` pass 29/29; production build pass; browser QA xác nhận Delete rồi Ctrl+Z khôi phục đúng `customer_name` và `approved`; helper test xác nhận marquee chỉ lấy hai field giao vùng trên trang hiện tại, paste lần đầu tạo `customer_name_copy`/`approved_copy`, paste tiếp tạo hậu tố `_2`, và bản dán không mang liên kết widget nguồn.
+## 28/09/2026 — Distribute trường form theo khoảng cách
+
+Đã thêm hai nút sau nhóm căn chỉnh trong PDF Prepare Form: `Canh đều ngang` và `Canh đều dọc`. Khi có ít nhất ba trường cùng trang, hai trường biên được giữ làm mốc (trái/phải hoặc trên/dưới), các trường ở giữa được sắp lại với khoảng cách bằng nhau dựa trên cạnh của từng khung. Thao tác được ghi vào history để Ctrl+Z hoàn tác như các lệnh căn chỉnh khác. Kiểm tra: TypeScript pass; `npm test` pass 29/29; production build pass.
+## 28/09/2026 — Sửa export PDF và thứ tự đổi tên hàng loạt
+
+Đã làm ổn định luồng `Tải PDF form` bằng cách giữ bản sao dữ liệu PDF nguyên vẹn khi qua PDF.js và tạo bản sao an toàn trước khi nạp lại bằng pdf-lib; export cũng kiểm tra đầu ra rỗng và báo lỗi rõ ràng. Phần đổi tên hàng loạt đã bỏ input hậu tố, giữ tiền tố và số bắt đầu, đồng thời thêm dropdown chọn thứ tự `Trái qua phải, từ trên xuống dưới` hoặc `Trên xuống dưới, từ trái qua phải`. Tên được gán theo tọa độ object đã chọn và vẫn tự tránh trùng tên. Kiểm tra: TypeScript pass; `npm test` pass 29/29; production build pass.
+## 28/09/2026 — Khắc phục PDF form thiếu default appearance
+
+Đã sửa lỗi export với các PDF có text field hợp lệ nhưng thiếu `/DA` (default appearance), lỗi trước đây hiển thị dạng `No /DA (default appearance) entry found for field`. Khi lưu, pdf-lib giờ giữ nguyên appearance stream của form gốc thay vì tự động tái tạo mọi field; các field mới vẫn được tạo và có appearance riêng. Kiểm tra: TypeScript pass; production build pass; kiểm tra export/reopen PDF xác nhận 1 trang, 2 field và output 2698 bytes.
+## 28/09/2026 — Sửa lỗi `/DA` khi tạo field text mới
+
+Đã xác định nguyên nhân còn sót: `text.setFontSize()` được gọi trước `addToPage()`, trong khi pdf-lib chỉ tạo `/DA` sau khi widget được gắn vào trang. Đã đổi thứ tự thành thêm field vào trang trước rồi mới đặt cỡ chữ; đây là trường hợp gây lỗi `No /DA ... text_1` khi PDF chỉ chứa các field mới tạo. Kiểm tra: TypeScript pass; `npm test` pass 29/29; production build pass.
+## 28/09/2026 — Sắp xếp đổi tên theo hàng/cột trực quan và giới hạn panel trái
+
+Đã sửa thứ tự đổi tên hàng loạt để gom object theo các dải hình học giao nhau trước khi sắp xếp. Chế độ `Trái qua phải, từ trên xuống dưới` giờ xử lý từng hàng từ trái sang phải rồi chuyển xuống hàng kế tiếp; chế độ `Trên xuống dưới, từ trái qua phải` xử lý từng cột từ trên xuống dưới rồi chuyển sang cột kế tiếp. Cách này không bị sai khi các object cùng hàng có sai số tọa độ Y nhỏ do thao tác kéo. Panel công cụ bên trái được giới hạn trong chiều cao workspace và có cuộn nội bộ, nên nội dung đổi tên dài không tràn ra ngoài khung. Kiểm tra: TypeScript pass; `npm test` pass 29/29; production build pass.
+## 29/09/2026 — Field trong suốt và điều tra file Illustrator
+
+Đã bỏ stroke tím khỏi các form field xuất ra: field mới dùng `borderWidth: 0`, không có background; field import được đặt border width về 0 khi cập nhật vị trí. Giao diện workspace vẫn giữ viền tím để người dùng nhận biết và chọn object, nhưng viền này không đi vào PDF. Nút thử nghiệm `Tải bản phẳng cho Illustrator` đã được gỡ theo phản hồi vì không giải quyết nguyên nhân của file do tool số 7 tạo ra.
+
+Đã kiểm tra `D:\Vinut-TK\Downloads\Test.pdf`: file có 120 trang, không còn AcroForm hoặc annotation; nội dung trang thật có content stream và 62 XObject mỗi trang, nên dữ liệu không bị mất. Tuy nhiên cả 120 trang vẫn giữ `/PieceInfo /Illustrator` cùng 5 stream `/AIPDFPrivateData*` của template cũ. Tool số 7 `AmazonStickerControl` vẽ ảnh vào `GetOverContent()`, flatten form rồi ghép trang bằng `PdfSmartCopy`, nhưng không xóa Illustrator private data. Illustrator ưu tiên dữ liệu riêng cũ này thay vì page content mới nên mở file thấy trống, trong khi trình xem PDF hiển thị đúng. Đã sửa trực tiếp `D:\C# winform\Data matrix tools\Data matrix tools\Tools\AmazonStickerControl.cs` để xóa `/PieceInfo`, `/LastModified` và `/Thumb` khỏi page dictionary trước khi `PdfSmartCopy` nhập từng trang; cả Debug và Release build thành công với 0 warning, 0 error. Đã tạo `D:\Vinut-TK\Downloads\Test-Illustrator-Fixed.pdf` từ file cũ để kiểm chứng: 120 trang, 0 trang còn PieceInfo, content stream trang đầu vẫn 4003 bytes, không annotation và render giữ nguyên toàn bộ dữ liệu. DesignForge kiểm tra: TypeScript pass; `npm test` pass 29/29; production build pass.
+
+## 29/09/2026 — Định dạng chữ cho PDF Prepare Form
+
+Đã thêm thanh định dạng ngữ cảnh vào vùng toolbar canvas khi chọn text field hoặc date field: dropdown font PDF chuẩn (`Arial / Helvetica`, `Times Roman`, `Courier`), cỡ chữ 4–120 pt và ba lệnh căn chữ trái/giữa/phải. Thanh tự ẩn khi bỏ chọn, hỗ trợ áp dụng đồng thời cho nhiều text field đang chọn và giữ nguyên các thuộc tính qua copy/paste, history/undo. Khi import AcroForm, workspace đọc font name/font size từ `/DA` của widget hoặc field và đọc căn chữ từ `/Q`; form gốc chỉ được tái tạo appearance khi người dùng thật sự sửa style, tránh làm thay đổi ngoài ý muốn.
+
+Export ghi font, size và alignment vào AcroForm thật, đồng thời tái tạo appearance stream bằng font PDF tương ứng. QA mở lại file xuất xác nhận field import có `/Times-Roman 22 Tf`, `/Q 2`; field mới có `/Courier 14 Tf`, `/Q 1`; file có đủ hai field và 2640 bytes. Browser QA trên route `#/tools/pdf-prepare-form` xác nhận toolbar hiện sau khi vẽ/chọn text field, đổi được Times Roman/22 pt/căn phải, ẩn khi click vùng trống và nút tải báo `Đã tạo 1 trường form có thể điền.`. Kiểm tra: TypeScript pass; `npm test` pass 29/29; production build pass.
+
+## 29/09/2026 — Sửa export field có appearance không hoàn chỉnh
+
+Đã xác định lỗi `Unexpected N type: undefined` xảy ra khi xóa một field nguồn có dictionary `/AP` nhưng thiếu normal appearance `/N`; `pdf-lib` cố đọc `/N` trong `removeField()` và dừng export. Luồng xóa field nay tháo từng widget khỏi `/Annots` của trang, gỡ field khỏi AcroForm và xóa các indirect object liên quan mà không phụ thuộc appearance stream. Cách này cũng tránh để lại widget mồ côi sau khi xóa field import.
+
+Đã chuyển wheel zoom từ React `onWheel` sang native listener `{ passive: false }`, nên `preventDefault()` hoạt động đúng và không còn cảnh báo passive event trong console. QA bằng PDF tổng hợp cố ý có `/AP` thiếu `/N` đã export/reopen thành công, còn 0 field và 0 annotation; hai file thực `Form 25x110.pdf` và `Form 25x110-form.pdf` đọc lại lần lượt 0 và 32 field hợp lệ. Kiểm tra: TypeScript pass; `npm test` pass 29/29; production build pass.

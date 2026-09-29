@@ -11,6 +11,7 @@ import { combineImagesToPdf, downloadPdf, mergePdfFiles, type ImagePaperSize, ty
 import { buildHalftoneSvg, createHalftoneDots, drawHalftoneDot, pxToMm, type HalftoneSettings, type HalftoneShape } from './features/image-filter/engine';
 import { PromptLibraryPage } from './features/prompts/PromptLibraryPage';
 import { GifWorkspace } from './features/gif/GifWorkspace';
+import { PdfPrepareFormWorkspace } from './features/pdf/PdfPrepareFormWorkspace';
 import './styles.css';
 
 type View = 'discover' | 'tools' | 'resources' | 'skills' | 'prompts' | 'saved';
@@ -76,6 +77,8 @@ function App() {
       {searchOpen && <SearchDialog onClose={() => setSearchOpen(false)} onOpen={(item) => { setSearchOpen(false); item.kind === 'tool' ? openTool(item.slug) : go(item.kind === 'resource' ? 'resources' : item.kind === 'skill' ? 'skills' : 'prompts'); }} />}
       {route.tool && activeTool ? activeTool.id === 'pdf-editor'
         ? <PdfEditorWorkspace onBack={() => go('tools')} />
+        : activeTool.id === 'pdf-prepare-form'
+          ? <PdfPrepareFormWorkspace onBack={() => go('tools')} />
         : activeTool.id === 'image-filter'
           ? <ImageFilterWorkspace onBack={() => go('tools')} />
         : activeTool.category === 'GIF' ? <GifWorkspace key={activeTool.id} mode={activeTool.id === 'images-to-gif' ? 'images' : 'video'} onBack={() => { window.location.hash = '/tools?collection=gif'; }} />
@@ -274,10 +277,12 @@ function PdfToolPanel({ items, savedIds, onToggleSaved, onOpenTool }: { items: T
   const imageTool = items.find(item => item.id === 'images-to-pdf');
   const mergeTool = items.find(item => item.id === 'merge-pdf');
   const editorTool = items.find(item => item.id === 'pdf-editor');
+  const prepareFormTool = items.find(item => item.id === 'pdf-prepare-form');
   return <div className="pdf-inline-grid">
     {imageTool && <PdfInlineCard mode="images" />}
     {mergeTool && <PdfInlineCard mode="merge" />}
     {editorTool && <ToolMarketplaceCard item={editorTool} saved={savedIds.includes(editorTool.id)} onToggleSaved={onToggleSaved} onOpenTool={onOpenTool} />}
+    {prepareFormTool && <ToolMarketplaceCard item={prepareFormTool} saved={savedIds.includes(prepareFormTool.id)} onToggleSaved={onToggleSaved} onOpenTool={onOpenTool} />}
   </div>;
 }
 

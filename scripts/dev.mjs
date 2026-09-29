@@ -8,7 +8,14 @@ const buildCode = await new Promise((resolve, reject) => {
   build.once('error', reject);
   build.once('close', resolve);
 });
-if (buildCode !== 0) process.exit(buildCode ?? 1);
+if (buildCode !== 0) {
+  try {
+    await readFile('dist/index.html');
+    console.warn('DesignForge build could not replace dist; serving the last valid build instead.');
+  } catch {
+    process.exit(buildCode ?? 1);
+  }
+}
 
 const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.map': 'application/json', '.png': 'image/png', '.woff2': 'font/woff2' };
 const server = createServer(async (req, res) => {

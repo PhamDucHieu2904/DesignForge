@@ -41,6 +41,10 @@ await Promise.all([
   'mona-sans-latin-wght-normal.woff2',
 ].map(file => copyFile(`node_modules/@fontsource-variable/mona-sans/files/${file}`, `dist/assets/${file}`)));
 await cp('src/pdf-editor', 'dist/pdf-editor', { recursive: true });
+await Promise.all([
+  copyFile('src/pdf-editor/vendor/pdf.min.js', 'dist/assets/pdf.min.js'),
+  copyFile('src/pdf-editor/vendor/pdf.worker.min.js', 'dist/assets/pdf.worker.min.js'),
+]);
 const html = await readFile('index.html', 'utf8');
 await writeFile('dist/index.html', html.replace('/src/main.tsx', `${basePath}/assets/${bundleName}.js`).replace('</head>', `    <link rel="stylesheet" href="${basePath}/assets/${bundleName}.css" />\n  </head>`));
 await writeFile('dist/.nojekyll', '');
